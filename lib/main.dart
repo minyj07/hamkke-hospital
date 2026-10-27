@@ -8,11 +8,12 @@ import 'data/last_search_store.dart';
 import 'screens/profile_screen.dart';
 import 'services/location.dart';
 
-/// 최신 병원 데이터를 올려 둔 주소. .github/workflows/update-data.yml 이 GitHub Pages 에 배포한다.
+/// 최신 병원 데이터를 올려 둔 주소. .github/workflows/update-data.yml 이 저장소의 data 브랜치에
+/// 올린다. 이 계정의 GitHub Pages 는 HTTP 로만 열려서 HTTPS 인 raw.githubusercontent.com 을 쓴다.
 /// 빌드할 때 --dart-define=DATA_BASE_URL=... 로 바꿀 수 있고, 빈 값을 주면 앱에 든 데이터만 쓴다.
 const dataBaseUrl = String.fromEnvironment(
   'DATA_BASE_URL',
-  defaultValue: 'https://minyj07.github.io/hamkke-hospital/v1/',
+  defaultValue: 'https://raw.githubusercontent.com/minyj07/hamkke-hospital/data/v1/',
 );
 
 void main() {

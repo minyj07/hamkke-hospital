@@ -76,7 +76,9 @@ Python 3.10 이상과 [공공데이터포털](https://www.data.go.kr) 인증키(
 
 ### 처음 한 번 설정
 
-지금 배포 주소는 `https://minyj07.github.io/hamkke-hospital/v1/` 이고 앱의 기본값(`lib/main.dart`)으로 들어 있습니다.
+앱은 `https://raw.githubusercontent.com/minyj07/hamkke-hospital/data/v1/` 에서 받습니다(`lib/main.dart` 의 기본값).
+워크플로가 판마다 커밋 하나짜리 `data` 브랜치로 덮어써 올립니다. GitHub Pages 에도 함께 올리지만 이 계정의 Pages 는
+사용자 지정 도메인 때문에 HTTP 로만 열려서 앱은 쓰지 않습니다.
 
 1. 이 프로젝트를 GitHub 저장소에 올립니다. GitHub Pages 는 공개 저장소이거나 유료 플랜이어야 합니다.
 2. 저장소 **Settings → Secrets and variables → Actions → New repository secret** 에

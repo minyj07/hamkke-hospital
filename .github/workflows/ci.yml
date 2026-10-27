@@ -6,6 +6,7 @@ name: 테스트
 
 on:
   push:
+    branches-ignore: [data] # 병원 데이터만 있는 브랜치 (update-data.yml 이 올린다)
   pull_request:
 
 permissions:
