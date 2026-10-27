@@ -11,6 +11,7 @@
  "files": {
   "regions.json": "362715c24e245eea4752de22c9a8fe399ab2d1f63f308bdfc3df129dc92c26a2",
   "search.json": "7eaecf6053e9f3491947ef7a552823ffd84646c371d0d502c4cc1ee8de715a60",
+  "scoring.json": "c8b23df9e7065254b844fca1f1c86ea37699ebf9384dc90fd07cb2a3bff7f9c9",
   "hospitals/110000.json": "05f5f812c5358492f27e6bdaf2487abddcec100f0c589d370f588cc3bdbdd864",
   "hospitals/210000.json": "672734d8057c46631403a4f58d5ea2c8ec230b29b0c72d926c6f05a1792ec116",
   "hospitals/220000.json": "3374e766efa1acedc07c1e7ed3c5abec5f92828b655b5019946144f93e72f3e1",

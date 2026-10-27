@@ -4,7 +4,9 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <!-- 새 병원 정보 내려받기 (lib/data/data_store.dart). 위치 등 사용자 정보는 보내지 않음 -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- 저장한 검색 조건과 내려받은 병원 데이터는 백업하지 않는다 (res/xml 의 두 규칙) -->
+    <!-- 앱 잠금 (설정에서 켤 때만, 휴대폰의 지문·얼굴·비밀번호로 확인) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- 장애·건강 정보(검색 조건, 즐겨찾기, 최근 본 병원, 진료 카드)와 내려받은 병원 데이터는 백업하지 않는다 (res/xml 의 두 규칙) -->
     <application
         android:label="함께병원"
         android:name="${applicationName}"
@@ -61,6 +63,11 @@
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="nmap"/>
+        </intent>
+        <!-- 정보 오류 신고·문의 메일 -->
+        <intent>
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
         </intent>
     </queries>
 </manifest>

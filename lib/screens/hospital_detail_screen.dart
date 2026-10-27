@@ -1,110 +1,55 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../data/favorites.dart';
+import '../data/regions.dart';
 import '../models/hospital.dart';
+import '../models/korean.dart';
 import '../services/recommender.dart';
+import 'app_scope.dart';
+import 'care_card_screen.dart';
+import 'data_notice.dart';
+import 'help.dart';
+import 'hospital_actions.dart';
+import 'report_screen.dart';
 
-/// 네이버 지도 웹에서 병원을 찾는 주소. 앱이 없을 때와 공유할 때 쓴다.
-Uri naverMapSearch(Hospital h) => Uri.https(
-    'map.naver.com', '/p/search/${[h.district, h.name].where((s) => s.isNotEmpty).join(' ')}');
-
-/// 가족 등에게 보낼 병원 정보.
-String shareText(Hospital h) => [
-      '[함께병원] ${h.name}',
-      [h.kind, h.district].where((s) => s.isNotEmpty).join(' · '),
-      '주소: ${h.address}',
-      if (h.phone.isNotEmpty) '전화: ${h.phone}',
-      '지도: ${naverMapSearch(h)}',
-    ].where((line) => line.isNotEmpty).join('\n');
-
-class HospitalDetailScreen extends StatelessWidget {
+class HospitalDetailScreen extends StatefulWidget {
   const HospitalDetailScreen({
     super.key,
     required this.hospital,
-    required this.favorites,
     this.recommendation,
   });
 
   final Hospital hospital;
-  final Favorites favorites;
 
   /// 추천 결과에서 열었을 때의 거리와 추천 이유. 검색·즐겨찾기에서 열면 없다.
   final Recommendation? recommendation;
 
-  Future<void> _open(BuildContext context, Uri uri) async {
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) &&
-        context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('앱을 열 수 없어요.')),
-      );
-    }
-  }
+  @override
+  State<HospitalDetailScreen> createState() => _HospitalDetailScreenState();
+}
 
-  /// [app] 주소로 네이버 지도 앱을 열고, 앱이 없으면 [web] 을 연다.
-  /// 네이버 지도 URL Scheme 은 appname(앱 패키지 이름)이 필수다.
-  Future<void> _openMapApp(BuildContext context, String app, Uri web) async {
-    try {
-      final uri = Uri.parse('$app&appname=kr.hamkkehospital.app');
-      if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return;
-    } on PlatformException {
-      // 네이버 지도 앱이 설치되어 있지 않다.
-    }
-    if (context.mounted) await _open(context, web);
-  }
+class _HospitalDetailScreenState extends State<HospitalDetailScreen> {
+  late final AppServices _services = AppScope.of(context);
+  late final Future<DataInfo> _info = _services.repository.loadInfo();
 
-  /// 병원 위치를 네이버 지도에서 보여준다.
-  void _openMap(BuildContext context, Hospital h) => _openMapApp(
-        context,
-        'nmap://place?lat=${h.lat}&lng=${h.lng}&name=${Uri.encodeComponent(h.name)}',
-        naverMapSearch(h),
-      );
-
-  /// 지금 있는 곳에서 병원까지 대중교통 길찾기. 네이버 지도 앱이 없으면 카카오맵 웹 길찾기를 연다
-  /// (네이버 지도 웹은 좌표로 길찾기를 여는 주소가 없다).
-  void _openDirections(BuildContext context, Hospital h) => _openMapApp(
-        context,
-        'nmap://route/public?dlat=${h.lat}&dlng=${h.lng}&dname=${Uri.encodeComponent(h.name)}',
-        Uri.parse('https://map.kakao.com/link/to/${Uri.encodeComponent(h.name)},${h.lat},${h.lng}'),
-      );
-
-  Future<void> _share(BuildContext buttonContext, Hospital h) async {
-    // 아이패드는 공유 창을 띄울 위치가 있어야 한다.
-    final box = buttonContext.findRenderObject() as RenderBox?;
-    await SharePlus.instance.share(ShareParams(
-      text: shareText(h),
-      subject: h.name,
-      sharePositionOrigin: box == null ? null : box.localToGlobal(Offset.zero) & box.size,
-    ));
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_services.recent.add(widget.hospital));
   }
 
   @override
   Widget build(BuildContext context) {
-    final h = hospital;
-    final rec = recommendation;
-    final wide = ButtonStyle(minimumSize: WidgetStateProperty.all(const Size.fromHeight(56)));
+    final h = widget.hospital;
+    final rec = widget.recommendation;
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(h.name),
-        actions: [
-          ListenableBuilder(
-            listenable: favorites,
-            builder: (context, _) {
-              final on = favorites.contains(h.id);
-              return IconButton(
-                icon: Icon(on ? Icons.star : Icons.star_border),
-                tooltip: on ? '즐겨찾기에서 빼기' : '즐겨찾기에 넣기',
-                onPressed: () => favorites.toggle(h),
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(h.name)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          Text(h.name, style: theme.textTheme.headlineSmall),
           if (h.kind.isNotEmpty)
             ListTile(
               leading: const Icon(Icons.local_hospital),
@@ -135,70 +80,52 @@ class HospitalDetailScreen extends StatelessWidget {
               leading: const Icon(Icons.public),
               title: const Text('홈페이지'),
               subtitle: Text(h.homepage),
-              onTap: () => _open(context, Uri.parse(h.homepage)),
+              onTap: () => openExternal(context, Uri.parse(h.homepage)),
             ),
+          if (rec != null && rec.missing.isNotEmpty) _MissingWarning(missing: rec.missing),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  style: wide,
-                  icon: const Icon(Icons.call),
-                  label: const Text('전화하기'),
-                  onPressed: h.phone.isEmpty
-                      ? null
-                      : () => _open(context, Uri(scheme: 'tel', path: h.phone)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: wide,
-                  icon: const Icon(Icons.map),
-                  label: const Text('네이버 지도'),
-                  onPressed: () => _openMap(context, h),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: wide,
-                  icon: const Icon(Icons.directions),
-                  label: const Text('길찾기'),
-                  onPressed: () => _openDirections(context, h),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Builder(
-                  builder: (buttonContext) => OutlinedButton.icon(
-                    style: wide,
-                    icon: const Icon(Icons.share),
-                    label: const Text('공유하기'),
-                    onPressed: () => _share(buttonContext, h),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (rec != null) _Section(title: '추천 이유', items: rec.reasons),
-          _Section(title: '지정 현황', items: h.notes),
-          _Section(title: '진료과목', items: h.departments.toList()),
-          _Section(
-            title: '편의시설',
-            items: [
-              for (final f in Facility.values)
-                if (h.facilities.contains(f)) f.label,
-            ],
-          ),
-          if (rec != null && rec.missing.isNotEmpty)
+          _Actions(hospital: h),
+          if (rec != null)
             _Section(
-              title: '방문 전 확인하세요',
-              items: [for (final f in rec.missing) '${f.label} 정보가 없어요'],
+              title: '추천 이유',
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final reason in rec.reasons)
+                    _Line(icon: Icons.check_circle, color: theme.colorScheme.primary, text: reason),
+                ],
+              ),
+            ),
+          if (h.notes.isNotEmpty || h.categories.isNotEmpty) _DesignationSection(hospital: h),
+          if (h.departments.isNotEmpty)
+            _Section(
+              title: '진료과목',
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [for (final d in h.departments) Chip(label: Text(d))],
+              ),
+            ),
+          _FacilitySection(hospital: h, wanted: rec?.wanted ?? const {}),
+          const _Section(
+            title: '진료 시간',
+            child: Text('진료 시간과 쉬는 날은 병원에 전화로 확인하세요.'),
+          ),
+          FutureBuilder(
+            future: _info,
+            builder: (context, snapshot) => DataNotice(info: snapshot.data, emergency: true),
+          ),
+          if (_services.contactEmail.isNotEmpty)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                icon: const Icon(Icons.flag_outlined),
+                label: const Text('정보가 틀렸어요'),
+                onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ReportScreen(hospital: h),
+                )),
+              ),
             ),
         ],
       ),
@@ -206,15 +133,246 @@ class HospitalDetailScreen extends StatelessWidget {
   }
 }
 
-class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.items});
+/// 전화·길찾기·즐겨찾기·공유·지도·진료 카드. 글자가 크면 한 줄에 하나씩 놓는다.
+class _Actions extends StatelessWidget {
+  const _Actions({required this.hospital});
 
-  final String title;
-  final List<String> items;
+  final Hospital hospital;
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) return const SizedBox.shrink();
+    final services = AppScope.of(context);
+    final h = hospital;
+    final wide = ButtonStyle(minimumSize: WidgetStateProperty.all(const Size.fromHeight(56)));
+    return ListenableBuilder(
+      listenable: Listenable.merge([services.favorites, services.careCard]),
+      builder: (context, _) {
+        final favorite = services.favorites.contains(h.id);
+        final buttons = <Widget>[
+          FilledButton.icon(
+            style: wide,
+            icon: const Icon(Icons.call),
+            label: const Text('전화하기'),
+            onPressed: h.phone.isEmpty ? null : () => callPhone(context, h.phone),
+          ),
+          OutlinedButton.icon(
+            style: wide,
+            icon: const Icon(Icons.directions),
+            label: const Text('길찾기'),
+            onPressed: () => openDirections(context, h),
+          ),
+          OutlinedButton.icon(
+            style: wide,
+            icon: Icon(favorite ? Icons.star : Icons.star_border),
+            label: Text(favorite ? '즐겨찾기에서 빼기' : '즐겨찾기에 넣기'),
+            onPressed: () => services.favorites.toggle(h),
+          ),
+          Builder(
+            builder: (buttonContext) => OutlinedButton.icon(
+              style: wide,
+              icon: const Icon(Icons.share),
+              label: const Text('공유하기'),
+              onPressed: () => shareHospital(buttonContext, h),
+            ),
+          ),
+          OutlinedButton.icon(
+            style: wide,
+            icon: const Icon(Icons.map_outlined),
+            label: const Text('지도에서 보기'),
+            onPressed: () => openOnMap(context, h),
+          ),
+          if (services.careCard.card != null)
+            FilledButton.tonalIcon(
+              style: wide,
+              icon: const Icon(Icons.badge),
+              label: const Text('진료 카드 보여 주기'),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const ShowCardScreen(),
+              )),
+            ),
+        ];
+        return LayoutBuilder(builder: (context, constraints) {
+          final scale = MediaQuery.textScalerOf(context).scale(1);
+          final perRow = constraints.maxWidth / scale >= 300 ? 2 : 1;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < buttons.length; i += perRow)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (var j = i; j < i + perRow; j++) ...[
+                        if (j > i) const SizedBox(width: 12),
+                        Expanded(
+                          child: j < buttons.length ? buttons[j] : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
+          );
+        });
+      },
+    );
+  }
+}
+
+/// 필요한데 없다고 확인된 편의시설. 눈에 잘 띄게 위쪽에 둔다.
+class _MissingWarning extends StatelessWidget {
+  const _MissingWarning({required this.missing});
+
+  final List<Facility> missing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final names = missing.map((f) => f.label).join(', ');
+    return Card.filled(
+      color: theme.colorScheme.errorContainer,
+      margin: const EdgeInsets.only(top: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.warning_amber, color: theme.colorScheme.onErrorContainer),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                '확인 필요: 필요하신 ${subjectParticle(names)} 없다고 확인됐어요. 방문 전에 전화로 확인하세요.',
+                style: TextStyle(color: theme.colorScheme.onErrorContainer),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DesignationSection extends StatelessWidget {
+  const _DesignationSection({required this.hospital});
+
+  final Hospital hospital;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _Section(
+      title: '지정 현황',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final note in hospital.notes)
+            _Line(icon: Icons.verified, color: theme.colorScheme.primary, text: note),
+          for (final c in InstitutionCategory.values)
+            if (hospital.categories.contains(c))
+              TextButton.icon(
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                icon: const Icon(Icons.help_outline),
+                label: Text(categoryQuestion(c)),
+                onPressed: () => showCategoryHelp(context, c),
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 편의시설을 있음·없음·정보 없음으로 나눠 보여 준다. 정보 없음을 없음으로 보여 주지 않는다.
+class _FacilitySection extends StatelessWidget {
+  const _FacilitySection({required this.hospital, required this.wanted});
+
+  final Hospital hospital;
+
+  /// 사용자 조건에 필요한 시설. '필요'라고 덧붙인다.
+  final Set<Facility> wanted;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    if (!hospital.hasFacilityInfo) {
+      final names = [
+        for (final f in Facility.values)
+          if (wanted.contains(f)) f.label,
+      ].join(', ');
+      return _Section(
+        title: '편의시설',
+        child: _Line(
+          icon: Icons.help_outline,
+          color: theme.colorScheme.onSurfaceVariant,
+          text: names.isEmpty
+              ? '편의시설 정보가 아직 없어요. 방문 전에 전화로 확인하세요.'
+              : '필요하신 $names 정보가 아직 없어요. 방문 전에 전화로 확인하세요.',
+        ),
+      );
+    }
+    return _Section(
+      title: '편의시설',
+      child: Column(
+        children: [
+          for (final f in Facility.values)
+            MergeSemantics(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    switch (hospital.facilityStatus(f)) {
+                      FacilityStatus.present =>
+                        Icon(Icons.check_circle, color: theme.colorScheme.primary),
+                      FacilityStatus.absent => Icon(Icons.cancel, color: theme.colorScheme.error),
+                      FacilityStatus.unknown =>
+                        Icon(Icons.help_outline, color: theme.colorScheme.onSurfaceVariant),
+                    },
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(wanted.contains(f) ? '${f.label} (필요)' : f.label)),
+                    const SizedBox(width: 12),
+                    Text(hospital.facilityStatus(f).label, style: theme.textTheme.labelLarge),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Line extends StatelessWidget {
+  const _Line({required this.icon, required this.color, required this.text});
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: color),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text)),
+        ],
+      ),
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 24),
       child: Column(
@@ -225,11 +383,7 @@ class _Section extends StatelessWidget {
             child: Text(title, style: Theme.of(context).textTheme.titleMedium),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [for (final i in items) Chip(label: Text(i))],
-          ),
+          child,
         ],
       ),
     );

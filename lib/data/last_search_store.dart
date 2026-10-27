@@ -65,3 +65,34 @@ class FileLastSearchStore implements LastSearchStore {
     }
   }
 }
+
+/// 지난번 조건. 홈과 병원 찾기 화면이 같은 조건을 보도록 앱에 하나만 두고, 바뀌면 알린다.
+class LastSearch extends ChangeNotifier {
+  LastSearch(this._store);
+
+  final LastSearchStore _store;
+  SearchConditions? _value;
+  late final Future<void> _ready = _store.load().then((value) {
+    _value = value;
+    notifyListeners();
+  });
+
+  /// 저장해 둔 조건을 읽는다. 여러 번 불러도 한 번만 읽는다.
+  Future<void> load() => _ready;
+
+  SearchConditions? get value => _value;
+
+  Future<void> save(SearchConditions conditions) async {
+    await _ready;
+    _value = conditions;
+    notifyListeners();
+    await _store.save(conditions);
+  }
+
+  Future<void> clear() async {
+    await _ready;
+    _value = null;
+    notifyListeners();
+    await _store.clear();
+  }
+}

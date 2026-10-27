@@ -15,10 +15,27 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from build_data import OUT, SCHEMA
+from build_data import FACILITIES, OUT, SCHEMA
 
 # 병원마다 꼭 있어야 하는 키 (lib/models/hospital.dart 의 Hospital.fromJson).
 REQUIRED_KEYS = ("id", "n", "a", "y", "x")
+# 추천 점수표의 이름 (lib/services/score_weights.dart 의 ScoreWeights.fromJson).
+SCORING_KEYS = {
+    "designated", "coreDepartment", "coreDepartmentMax", "generalDepartment", "generalDepartmentMax",
+    "specialist", "child", "facility", "facilityMissing", "chosenFacility", "chosenFacilityMissing",
+    "regionalPerKm", "regionalMaxPenalty", "localPerKm",
+}
+
+
+def check_scoring(scoring: object) -> list[str]:
+    """점수표는 앱이 아는 이름만, 0 이상의 숫자로 적는다. 틀리면 앱은 그 값 대신 기본값을 쓴다."""
+    if not isinstance(scoring, dict):
+        return ["추천 점수표(scoring.json)가 이름: 숫자 모양이 아닙니다."]
+    errors = [f"추천 점수표에 앱이 모르는 이름이 있습니다: {k}" for k in sorted(scoring.keys() - SCORING_KEYS)]
+    errors += [f"추천 점수표에 {k} 가 없습니다." for k in sorted(SCORING_KEYS - scoring.keys())]
+    errors += [f"추천 점수표의 {k} 가 0 이상의 숫자가 아닙니다: {v!r}" for k, v in scoring.items()
+               if isinstance(v, bool) or not isinstance(v, (int, float)) or v < 0]
+    return errors
 
 
 def load_previous(source: str) -> dict | None:
@@ -49,6 +66,11 @@ def check(meta: dict, previous: dict | None, min_ratio: float) -> list[str]:
         on_disk.add("search.json")
     else:
         errors.append("병원 이름 검색 색인(search.json)이 없습니다.")
+    if (OUT / "scoring.json").exists():
+        on_disk.add("scoring.json")
+        errors += check_scoring(json.loads((OUT / "scoring.json").read_text(encoding="utf-8")))
+    else:
+        errors.append("추천 점수표(scoring.json)가 없습니다.")
     for name in sorted(on_disk ^ files.keys()):
         errors.append(f"meta.json 의 파일 목록과 실제 파일이 다릅니다: {name}")
     for name, digest in files.items():
@@ -67,6 +89,12 @@ def check(meta: dict, previous: dict | None, min_ratio: float) -> list[str]:
         broken = sum(1 for h in hospitals if any(h.get(k) in (None, "") for k in REQUIRED_KEYS))
         if broken:
             errors.append(f"{region['name']}: 필수 항목이 빠진 병원 {broken}곳")
+        # 편의시설은 있다(f)와 없다(fx)가 겹치면 안 된다. 앱이 모르는 이름은 앱이 건너뛰지만 오타일 수 있다.
+        odd = sum(1 for h in hospitals
+                  if set(h.get("f", [])) & set(h.get("fx", []))
+                  or not set(h.get("f", [])) | set(h.get("fx", [])) <= FACILITIES)
+        if odd:
+            errors.append(f"{region['name']}: 편의시설이 이상한 병원 {odd}곳")
         if len(hospitals) != region["count"]:
             errors.append(f"{region['name']}: regions.json 은 {region['count']}곳, 파일은 {len(hospitals)}곳")
         # 검색에서 고른 병원을 id 로 찾으므로 색인과 병원 파일의 id 가 같아야 한다.

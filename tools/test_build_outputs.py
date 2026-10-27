@@ -75,6 +75,19 @@ class OutputTest(unittest.TestCase):
         self.assertIn("search.json", meta["files"])
         self.assertTrue(any("검색 색인" in e for e in errors), errors)
 
+    def test_추천_점수표를_데이터와_함께_내보내고_모르는_이름은_검사에서_잡는다(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp)
+            self.write(self.build(), out)
+            meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
+            scoring = json.loads((out / "scoring.json").read_text(encoding="utf-8"))
+        self.assertIn("scoring.json", meta["files"])
+        self.assertEqual(scoring, json.loads(build_data.SCORING.read_text(encoding="utf-8")))
+        self.assertEqual(verify_data.check_scoring(scoring), [])
+        self.assertEqual(len(verify_data.check_scoring({**scoring, "designatd": 40})), 1)
+        self.assertEqual(len(verify_data.check_scoring({**scoring, "child": -1})), 1)
+        self.assertEqual(len(verify_data.check_scoring({k: v for k, v in scoring.items() if k != "child"})), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

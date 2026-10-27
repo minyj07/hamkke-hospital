@@ -5,6 +5,7 @@ import '../models/disability.dart';
 import '../models/hospital.dart';
 import '../models/user_profile.dart';
 import 'keywords.dart';
+import 'score_weights.dart';
 
 /// 사용자 조건에서 뽑아낸 "이런 병원이면 좋다"는 요구사항.
 class CareRequirement {
@@ -13,6 +14,8 @@ class CareRequirement {
     required this.departments,
     required this.facilities,
     Set<String>? coreDepartments,
+    this.facilitiesChosen = false,
+    this.forChild = false,
     this.unmatchedTexts = const [],
   }) : coreDepartments = coreDepartments ?? departments;
 
@@ -26,8 +29,14 @@ class CareRequirement {
   /// 누구에게나 더하는 내과·가정의학과보다 높이 치고, 전문의 가산점도 이 과에만 준다.
   final Set<String> coreDepartments;
 
-  /// 이용에 꼭 필요한 편의시설. 없으면 경고로 알려준다.
+  /// 이용에 꼭 필요한 편의시설. 없다고 확인되면 경고로 알려준다.
   final Set<Facility> facilities;
+
+  /// [facilities] 를 사용자가 직접 골랐는지. 직접 고른 시설은 점수를 더 크게 준다.
+  final bool facilitiesChosen;
+
+  /// 어린이 진료인지. 소아청소년과가 있는 병원을 더 높이 친다.
+  final bool forChild;
 
   /// '기타'에 입력했지만 맞는 진료과를 찾지 못한 글. 화면에서 알려준다.
   final List<String> unmatchedTexts;
@@ -40,6 +49,8 @@ class Recommendation {
     required this.distanceKm,
     required this.reasons,
     required this.missing,
+    this.present = const [],
+    this.unknown = const [],
     this.designated = false,
   });
 
@@ -47,14 +58,23 @@ class Recommendation {
   final double score;
   final double distanceKm;
 
-  /// 추천 이유 (화면에 그대로 보여준다).
+  /// 추천 이유 (화면에 그대로 보여준다). 점수 숫자는 넣지 않는다.
   final List<String> reasons;
 
-  /// 필요한데 이 병원에 없는 편의시설.
+  /// 필요한 편의시설 중 이 병원에 있다고 확인된 것.
+  final List<Facility> present;
+
+  /// 필요한데 이 병원에 없다고 확인된 편의시설.
   final List<Facility> missing;
+
+  /// 필요한데 이 병원에 있는지 정보가 없는 편의시설. 없다고 보지 않으므로 점수를 빼지 않는다.
+  final List<Facility> unknown;
 
   /// 찾는 진료에 맞는 정부 지정 기관인지 (예: 재활 치료의 재활의료기관).
   final bool designated;
+
+  /// 사용자 조건에 필요한 편의시설 전부.
+  Set<Facility> get wanted => {...present, ...missing, ...unknown};
 }
 
 const _departmentsByType = <DisabilityType, Set<String>>{
@@ -88,6 +108,8 @@ const _mobilityTypes = {DisabilityType.physical, DisabilityType.brainLesion};
 /// 일반 진료·만성질환 관리에서 누구에게나 더하는 진료과.
 const _generalDepartments = {'가정의학과', '내과'};
 
+const _childDepartment = '소아청소년과';
+
 /// 권역마다 몇 곳 없어서 멀어도 찾아갈 만한 지정 기관.
 const _regionalCategories = {
   InstitutionCategory.rehabHospital,
@@ -98,11 +120,34 @@ const _regionalCategories = {
   InstitutionCategory.friendlyObgyn,
 };
 
+/// 장애 유형·정도·진료로 미리 정하는 편의시설. 병원 찾기에서 사용자가 더하거나 뺄 수 있다.
+Set<Facility> suggestedFacilities(
+  Set<DisabilityType> types,
+  Severity severity,
+  CareNeed need,
+) {
+  final mobility = types.any(_mobilityTypes.contains);
+  return {
+    if (mobility) ...{Facility.wheelchair, Facility.parking, Facility.toilet},
+    if (mobility && severity == Severity.severe) Facility.lift,
+    if (types.contains(DisabilityType.ostomy)) Facility.toilet,
+    if (types.contains(DisabilityType.visual)) Facility.braille,
+    if (types.contains(DisabilityType.hearing)) Facility.signLanguage,
+    if (types.contains(DisabilityType.intellectual) ||
+        types.contains(DisabilityType.autism))
+      Facility.quietRoom,
+    if (need == CareNeed.dental && types.any(_needsSpecialDental.contains))
+      Facility.sedation,
+    if (need == CareNeed.chronic && types.contains(DisabilityType.kidney))
+      Facility.dialysis,
+  };
+}
+
 CareRequirement buildRequirement(UserProfile p) {
   final severe = p.severity == Severity.severe;
+  final child = p.age == AgeGroup.child;
   final categories = <InstitutionCategory>{};
   final departments = <String>{};
-  final facilities = <Facility>{};
 
   final unmatchedTexts = <String>[];
   Set<String> fromText(String text) {
@@ -115,21 +160,23 @@ CareRequirement buildRequirement(UserProfile p) {
     for (final t in p.types) ...?_departmentsByType[t],
     if (p.types.contains(DisabilityType.other)) ...fromText(p.otherDisability),
   };
+  // 어린이의 일반 진료·만성질환 관리는 소아청소년과가 장애 유형에 맞는 과와 함께 핵심 과다.
+  final primary = {...typeDepartments, if (child) _childDepartment};
 
   var core = <String>{};
   switch (p.need) {
     case CareNeed.general:
-      core = typeDepartments;
-      departments.addAll({...typeDepartments, ..._generalDepartments});
+      core = primary;
+      departments.addAll({...primary, ..._generalDepartments});
     case CareNeed.rehab:
       categories.addAll({
         InstitutionCategory.rehabHospital,
         InstitutionCategory.rehabDesignated,
       });
-      // 나이를 따로 묻지 않으므로 '기타'에 아이·소아 등을 썼을 때만 어린이 재활 기관을 찾는다.
-      final forChild = [p.otherDisability, p.otherNeed].any((text) =>
-          departmentsFromText(text, departmentNames.values).contains('소아청소년과'));
-      if (forChild) categories.add(InstitutionCategory.childRehab);
+      // 나이를 묻기 전에 저장한 조건도 '기타'에 아이·소아 등을 썼으면 어린이 재활 기관을 찾는다.
+      final childText = [p.otherDisability, p.otherNeed].any((text) =>
+          departmentsFromText(text, departmentNames.values).contains(_childDepartment));
+      if (child || childText) categories.add(InstitutionCategory.childRehab);
       departments.add('재활의학과');
     case CareNeed.checkup:
       categories.add(InstitutionCategory.friendlyCheckup);
@@ -139,17 +186,11 @@ CareRequirement buildRequirement(UserProfile p) {
       if (severe || p.types.any(_needsSpecialDental.contains)) {
         categories.add(InstitutionCategory.dentalCenter);
       }
-      if (p.types.any(_needsSpecialDental.contains)) {
-        facilities.add(Facility.sedation);
-      }
       departments.add('치과');
     case CareNeed.chronic:
       categories.add(InstitutionCategory.primaryCare);
-      core = typeDepartments;
-      departments.addAll({...typeDepartments, ..._generalDepartments});
-      if (p.types.contains(DisabilityType.kidney)) {
-        facilities.add(Facility.dialysis);
-      }
+      core = primary;
+      departments.addAll({...primary, ..._generalDepartments});
     case CareNeed.pregnancy:
       categories.add(InstitutionCategory.friendlyObgyn);
       departments.add('산부인과');
@@ -159,24 +200,8 @@ CareRequirement buildRequirement(UserProfile p) {
     case CareNeed.other:
       final wanted = fromText(p.otherNeed);
       // 입력한 글에서 진료과를 못 찾으면 일반 진료처럼 찾는다.
-      core = wanted.isNotEmpty ? wanted : typeDepartments;
-      departments.addAll(
-          wanted.isNotEmpty ? wanted : {...typeDepartments, ..._generalDepartments});
-  }
-
-  // 유형별로 병원 이용에 필요한 편의시설.
-  if (p.types.any(_mobilityTypes.contains)) {
-    facilities.addAll({Facility.wheelchair, Facility.parking, Facility.toilet});
-    if (severe) facilities.add(Facility.lift);
-  }
-  if (p.types.contains(DisabilityType.ostomy)) facilities.add(Facility.toilet);
-  if (p.types.contains(DisabilityType.visual)) facilities.add(Facility.braille);
-  if (p.types.contains(DisabilityType.hearing)) {
-    facilities.add(Facility.signLanguage);
-  }
-  if (p.types.contains(DisabilityType.intellectual) ||
-      p.types.contains(DisabilityType.autism)) {
-    facilities.add(Facility.quietRoom);
+      core = wanted.isNotEmpty ? wanted : primary;
+      departments.addAll(wanted.isNotEmpty ? wanted : {...primary, ..._generalDepartments});
   }
 
   return CareRequirement(
@@ -187,7 +212,9 @@ CareRequirement buildRequirement(UserProfile p) {
       CareNeed.general || CareNeed.chronic || CareNeed.other => core,
       _ => departments,
     },
-    facilities: facilities,
+    facilities: p.chosenFacilities ?? suggestedFacilities(p.types, p.severity, p.need),
+    facilitiesChosen: p.chosenFacilities != null,
+    forChild: child,
     unmatchedTexts: unmatchedTexts,
   );
 }
@@ -197,9 +224,16 @@ List<Recommendation> recommend(
   UserProfile profile,
   List<Hospital> hospitals, {
   int? limit = 20,
+  ScoreWeights weights = ScoreWeights.standard,
 }) {
+  final w = weights;
   final req = buildRequirement(profile);
   final Area(:lat, :lng) = profile.origin;
+  // 경고·추천 이유가 늘 같은 순서로 보이게 Facility 순서를 따른다.
+  final wanted = [
+    for (final f in Facility.values)
+      if (req.facilities.contains(f)) f,
+  ];
   final results = <Recommendation>[];
 
   for (final h in hospitals) {
@@ -213,41 +247,64 @@ List<Recommendation> recommend(
     if (matchedCategories.isEmpty && matchedDepartments.isEmpty) continue;
 
     if (matchedCategories.isNotEmpty) {
-      score += 50;
+      score += w.designated;
       reasons.addAll(matchedCategories.map((c) => c.label));
     }
     if (matchedDepartments.isNotEmpty) {
       final matchedCore = req.coreDepartments.intersection(h.departments);
       final matchedGeneral = matchedDepartments.difference(matchedCore);
-      score += min(matchedCore.length, 2) * 20 + min(matchedGeneral.length, 2) * 5;
+      score += min(matchedCore.length, w.coreDepartmentMax) * w.coreDepartment +
+          min(matchedGeneral.length, w.generalDepartmentMax) * w.generalDepartment;
       reasons.add('진료과: ${[...matchedCore, ...matchedGeneral].join(', ')}');
       final specialty =
           matchedCore.where((d) => advertisesSpecialty(h.name, d));
       if (specialty.isNotEmpty) {
-        score += 15;
+        score += w.specialist;
         reasons.add('${specialty.first} 전문의 진료');
       }
     }
-
-    final matchedFacilities = req.facilities.intersection(h.facilities);
-    score += matchedFacilities.length * 8;
-    if (matchedFacilities.isNotEmpty) {
-      reasons.add('편의시설: ${matchedFacilities.map((f) => f.label).join(', ')}');
+    // 어린이면, 다른 조건으로 맞은 병원 중 소아청소년과도 있는 곳을 더 높이 친다.
+    if (req.forChild &&
+        h.departments.contains(_childDepartment) &&
+        !matchedDepartments.contains(_childDepartment)) {
+      score += w.child;
+      reasons.add('어린이 진료: $_childDepartment');
     }
-    final missing = req.facilities.difference(h.facilities).toList();
-    score -= missing.length * 6;
+
+    final present = <Facility>[];
+    final missing = <Facility>[];
+    final unknown = <Facility>[];
+    for (final f in wanted) {
+      switch (h.facilityStatus(f)) {
+        case FacilityStatus.present:
+          present.add(f);
+        case FacilityStatus.absent:
+          missing.add(f);
+        case FacilityStatus.unknown:
+          unknown.add(f);
+      }
+    }
+    // 정보가 없는 시설은 없다고 보지 않는다. 사용자가 직접 고른 시설은 더 크게 친다.
+    score += present.length * (req.facilitiesChosen ? w.chosenFacility : w.facility);
+    score -= missing.length *
+        (req.facilitiesChosen ? w.chosenFacilityMissing : w.facilityMissing);
+    if (present.isNotEmpty) {
+      reasons.add('편의시설: ${present.map((f) => f.label).join(', ')}');
+    }
 
     final km = distanceKm(lat, lng, h.lat, h.lng);
     // 권역 지정 기관은 멀어도 갈 가치가 있지만, 동네 병원은 가까울수록 좋다.
     final regional = matchedCategories.any(_regionalCategories.contains);
-    score -= regional ? min(km * 0.2, 30.0) : km * 2;
+    score -= regional ? min(km * w.regionalPerKm, w.regionalMaxPenalty) : km * w.localPerKm;
 
     results.add(Recommendation(
       hospital: h,
       score: score,
       distanceKm: km,
       reasons: reasons,
+      present: present,
       missing: missing,
+      unknown: unknown,
       designated: matchedCategories.isNotEmpty,
     ));
   }

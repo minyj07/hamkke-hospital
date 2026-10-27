@@ -30,6 +30,16 @@ enum Facility {
   final String label;
 }
 
+/// 병원에 편의시설이 있는지. 조사한 자료가 없으면 [unknown] 이고, 없다고 하지 않는다.
+enum FacilityStatus {
+  present('있음'),
+  absent('없음'),
+  unknown('정보 없음');
+
+  const FacilityStatus(this.label);
+  final String label;
+}
+
 /// 심평원 진료과목코드 → 이름. tools/build_data.py 의 DEPARTMENTS 와 같아야 한다.
 const departmentNames = <String, String>{
   '01': '내과',
@@ -73,6 +83,7 @@ class Hospital {
     this.departments = const {},
     this.categories = const {},
     this.facilities = const {},
+    this.absentFacilities = const {},
     this.notes = const [],
   });
 
@@ -105,10 +116,24 @@ class Hospital {
   /// 진료과목 이름 (예: 재활의학과).
   final Set<String> departments;
   final Set<InstitutionCategory> categories;
+
+  /// 있다고 확인된 편의시설.
   final Set<Facility> facilities;
+
+  /// 조사해서 없다고 확인된 편의시설. [facilities] 에도 여기에도 없으면 정보가 없는 것이다.
+  final Set<Facility> absentFacilities;
 
   /// 지정 현황 등 화면에 그대로 보여줄 설명 (예: 장애인 건강주치의 (주장애관리)).
   final List<String> notes;
+
+  FacilityStatus facilityStatus(Facility f) => facilities.contains(f)
+      ? FacilityStatus.present
+      : absentFacilities.contains(f)
+          ? FacilityStatus.absent
+          : FacilityStatus.unknown;
+
+  /// 편의시설을 하나라도 조사한 병원인지.
+  bool get hasFacilityInfo => facilities.isNotEmpty || absentFacilities.isNotEmpty;
 
   /// tools/build_data.py 가 만든 압축 형식(짧은 키)을 읽는다. [region] 은 읽은 시·도 파일의 코드.
   factory Hospital.fromJson(Map<String, dynamic> json, {String region = ''}) {
@@ -135,6 +160,9 @@ class Hospital {
       },
       facilities: {
         for (final f in strings('f')) ?_facilityByName[f],
+      },
+      absentFacilities: {
+        for (final f in strings('fx')) ?_facilityByName[f],
       },
       notes: strings('nt'),
     );

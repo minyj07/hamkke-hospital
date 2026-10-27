@@ -47,3 +47,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // 앱 잠금의 지문 창이 안드로이드 8 이하에서도 뜨려면 화면 테마가 AppCompat 이어야 한다 (res/values/styles.xml).
+    implementation("androidx.appcompat:appcompat:1.7.0")
+}

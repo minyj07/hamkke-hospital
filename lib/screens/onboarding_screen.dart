@@ -1,0 +1,102 @@
+import 'package:flutter/material.dart';
+
+/// 처음 켰을 때 한 번 보여 주는 안내 (3장, 건너뛸 수 있음). 저절로 넘어가지 않는다.
+class OnboardingScreen extends StatefulWidget {
+  const OnboardingScreen({super.key, required this.onDone});
+
+  final VoidCallback onDone;
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const _pages = [
+    (
+      Icons.local_hospital_outlined,
+      '나에게 맞는 병원을 찾아요',
+      '장애 유형과 필요한 진료를 고르면, 정부 지정 기관과 가까운 병원을 추천 이유와 함께 보여 줘요.',
+    ),
+    (
+      Icons.badge_outlined,
+      '병원에서는 진료 카드를 보여 주세요',
+      '내 장애와 소통 방법, 필요한 도움을 큰 글씨로 의료진에게 보여 줄 수 있어요.',
+    ),
+    (
+      Icons.lock_outline,
+      '내 정보는 이 휴대폰에만 둬요',
+      '장애 정보와 진료 카드는 앱 밖으로 보내지 않아요. 위치는 ‘현재 위치로 찾기’를 누를 때만 써요.',
+    ),
+  ];
+
+  final _controller = PageController();
+  int _page = 0;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _next() => _controller.nextPage(
+      duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final last = _page == _pages.length - 1;
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
+                onPressed: widget.onDone,
+                child: const Text('건너뛰기'),
+              ),
+            ),
+            Expanded(
+              child: PageView(
+                controller: _controller,
+                onPageChanged: (i) => setState(() => _page = i),
+                children: [
+                  for (final (icon, title, body) in _pages)
+                    SingleChildScrollView(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        children: [
+                          Icon(icon, size: 96, color: theme.colorScheme.primary),
+                          const SizedBox(height: 24),
+                          Semantics(
+                            header: true,
+                            child: Text(title,
+                                style: theme.textTheme.headlineSmall,
+                                textAlign: TextAlign.center),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(body,
+                              style: theme.textTheme.bodyLarge, textAlign: TextAlign.center),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Text('${_page + 1} / ${_pages.length}', textAlign: TextAlign.center),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: FilledButton(
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+                onPressed: last ? widget.onDone : _next,
+                child: Text(last ? '시작하기' : '다음'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

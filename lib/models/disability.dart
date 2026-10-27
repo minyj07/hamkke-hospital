@@ -47,6 +47,16 @@ enum CareNeed {
   final String hint;
 }
 
+/// 진료받을 사람의 나이대. 어린이면 소아청소년과와 어린이 재활 기관을 더 높이 친다.
+enum AgeGroup {
+  child('어린이·청소년', '만 18세 미만'),
+  adult('성인', '만 18세 이상');
+
+  const AgeGroup(this.label, this.hint);
+  final String label;
+  final String hint;
+}
+
 /// 화면에 보여줄 장애 유형. '기타'는 입력한 내용을 함께 보여준다.
 String disabilityLabel(Iterable<DisabilityType> types, String other) => types
     .map((t) => t == DisabilityType.other && other.isNotEmpty ? '기타($other)' : t.label)

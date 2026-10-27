@@ -1,0 +1,72 @@
+import 'package:flutter/widgets.dart';
+
+import '../data/app_settings.dart';
+import '../data/care_card_store.dart';
+import '../data/hospital_repository.dart';
+import '../data/last_search_store.dart';
+import '../data/saved_hospitals.dart';
+import '../services/app_lock.dart';
+import '../services/location.dart';
+
+Future<void> _keepScreenOnNoop(bool on) async {}
+
+/// 화면들이 함께 쓰는 데이터와 기기 기능. 앱에 하나만 두고 [AppScope] 로 내려 준다.
+class AppServices {
+  AppServices({
+    required this.repository,
+    required this.locationService,
+    required this.lastSearch,
+    required this.favorites,
+    required this.recent,
+    required this.careCard,
+    required this.settings,
+    required this.appLock,
+    this.mapEnabled = false,
+    this.appVersion = '',
+    this.contactEmail = '',
+    this.keepScreenOn = _keepScreenOnNoop,
+  });
+
+  final HospitalRepository repository;
+  final LocationService locationService;
+  final LastSearch lastSearch;
+  final Favorites favorites;
+  final RecentHospitals recent;
+  final SavedCareCard careCard;
+  final AppSettings settings;
+  final AppLock appLock;
+
+  /// 지도 키가 있어 추천 결과를 지도로 볼 수 있는지.
+  final bool mapEnabled;
+
+  /// 정보 오류 신고와 설정 화면에 보여 줄 앱 버전 (예: 1.0.0 (1)).
+  final String appVersion;
+
+  /// 신고·문의를 받는 메일 주소. 비어 있으면 신고·문의 버튼을 숨긴다.
+  final String contactEmail;
+
+  /// 진료 카드를 보여 주는 동안 화면이 꺼지지 않게 한다.
+  final Future<void> Function(bool on) keepScreenOn;
+
+  /// '내 정보 전부 지우기'를 할 때마다 1씩 오른다. 화면에 남은 장애 정보도 비우게 한다.
+  final personalDataCleared = ValueNotifier(0);
+
+  /// 진료 카드, 지난번 검색 조건, 즐겨찾기, 최근 본 병원을 지운다. 화면 설정은 남긴다.
+  Future<void> clearPersonalData() async {
+    await Future.wait([careCard.clear(), lastSearch.clear(), favorites.clear(), recent.clear()]);
+    personalDataCleared.value++;
+  }
+}
+
+class AppScope extends InheritedWidget {
+  const AppScope({super.key, required this.services, required super.child});
+
+  final AppServices services;
+
+  /// 서비스는 앱이 도는 동안 바뀌지 않으므로 의존 관계를 만들지 않는다 (initState 에서도 쓸 수 있다).
+  static AppServices of(BuildContext context) =>
+      context.getInheritedWidgetOfExactType<AppScope>()!.services;
+
+  @override
+  bool updateShouldNotify(AppScope oldWidget) => !identical(services, oldWidget.services);
+}

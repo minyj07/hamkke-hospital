@@ -161,6 +161,7 @@ class Builder:
                 "dp": set(),
                 "c": set(),
                 "f": set(),
+                "fx": set(),
                 "nt": [],
             }
         if department:
@@ -341,6 +342,9 @@ EVAL_DUMMY = "주출입문"
 EVAL_ENTRANCE = {"주출입구접근로", "주출입구높이차이제거", "주출입구(문)"}
 # 기구표 항목 → 앱의 편의시설 (lib/models/hospital.dart 의 Facility).
 EVAL_FACILITIES = {"장애인전용주차구역": "parking", "장애인사용가능화장실": "toilet", "유도및안내설비": "braille"}
+# 앱의 편의시설 이름. 기구표로 알 수 있는 것은 휠체어와 EVAL_FACILITIES 뿐이고, 나머지는 '정보 없음'이다.
+FACILITIES = {"wheelchair", "parking", "toilet", "lift", "signLanguage", "braille", "sedation",
+              "quietRoom", "dialysis"}
 FLOOR = re.compile(r"(지하|B)?\s*(\d+)\s*층")
 
 
@@ -371,11 +375,20 @@ def on_ground_floor(address: str) -> bool:
     return bool(floors) and all(f == ("", "1") for f in floors)
 
 
-def eval_facilities(items: set[str], address: str) -> set[str]:
-    facilities = {EVAL_FACILITIES[i] for i in items if i in EVAL_FACILITIES}
-    if EVAL_ENTRANCE <= items and ("승강기" in items or on_ground_floor(address)):
-        facilities.add("wheelchair")
-    return facilities
+def eval_facilities(items: set[str], address: str) -> tuple[set[str], set[str]]:
+    """기구표 항목 → (있는 편의시설, 없다고 확인된 편의시설).
+
+    휠체어는 입구를 모두 갖추고 승강기가 있거나 지상 1층에만 있으면 있고, 입구가 모자라거나 승강기 없이
+    다른 층에 있으면 없다. 입구는 갖췄는데 승강기가 없고 층을 모르면 알 수 없으므로 어느 쪽에도 넣지 않는다.
+    """
+    present = {EVAL_FACILITIES[i] for i in items if i in EVAL_FACILITIES}
+    absent = set(EVAL_FACILITIES.values()) - present
+    entrance = EVAL_ENTRANCE <= items
+    if entrance and ("승강기" in items or on_ground_floor(address)):
+        present.add("wheelchair")
+    elif not entrance or FLOOR.search(address):
+        absent.add("wheelchair")
+    return present, absent
 
 
 def merge_facilities(builder: Builder) -> None:
@@ -418,8 +431,10 @@ def merge_facilities(builder: Builder) -> None:
     linked = 0
     for rec in builder.records.values():
         if found := evals.get(rec["id"]):
-            # 같은 건물에 기구표가 여럿이면 모두 있다고 한 항목만 믿는다.
-            rec["f"] = eval_facilities(set.intersection(*found), rec["a"])
+            # 같은 건물에 기구표가 여럿이면 모두 있다고 한 것만 있고, 모두 없다고 한 것만 없다.
+            # 서로 다르면 어느 쪽인지 알 수 없다.
+            rec["f"], _ = eval_facilities(set.intersection(*found), rec["a"])
+            _, rec["fx"] = eval_facilities(set.union(*found), rec["a"])
             linked += 1
     print(f"  기구표 {len(rows):,}건 → 병원 {linked:,}곳에 연결 (가짜 응답 {dummy:,}건,"
           f" 도로명 주소 아님 {no_address:,}건, 건물에 앱 병원 없음 {no_hospital:,}건)")
@@ -427,9 +442,15 @@ def merge_facilities(builder: Builder) -> None:
         print(f"    처음 보는 기구표 항목 '{item}' {count:,}건 — 필요하면 EVAL_ITEMS 에 넣는다")
 
 
+# 추천 점수표 (lib/services/score_weights.dart). 데이터와 함께 배포해서 앱을 업데이트하지 않고 고친다.
+SCORING = ROOT / "data" / "scoring.json"
+
+
 def file_hashes() -> dict[str, str]:
     """앱이 바뀐 파일만 내려받도록 파일마다 내용의 sha256 을 적는다. 키는 assets/data/ 아래 경로."""
-    paths = [OUT / "regions.json", OUT / "search.json", *sorted((OUT / "hospitals").glob("*.json"))]
+    scoring = [OUT / "scoring.json"] if (OUT / "scoring.json").exists() else []
+    paths = [OUT / "regions.json", OUT / "search.json", *scoring,
+             *sorted((OUT / "hospitals").glob("*.json"))]
     return {p.relative_to(OUT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
 
 
@@ -458,12 +479,14 @@ def write_outputs(builder: Builder, primary_care_file: str | None) -> None:
         recs = sorted(by_region[code], key=lambda r: r["n"])
         compact = []
         for rec in recs:
-            out = {k: v for k, v in rec.items() if k not in ("r", "dp", "c", "f", "nt")}
+            out = {k: v for k, v in rec.items() if k not in ("r", "dp", "c", "f", "fx", "nt")}
             out["dp"] = sorted(rec["dp"])
             if rec["c"]:
                 out["c"] = sorted(rec["c"])
             if rec["f"]:
                 out["f"] = sorted(rec["f"])
+            if rec["fx"]:
+                out["fx"] = sorted(rec["fx"])
             if rec["nt"]:
                 out["nt"] = rec["nt"]
             for key in ("p", "dr", "sd", "e", "u"):
@@ -495,11 +518,15 @@ def write_outputs(builder: Builder, primary_care_file: str | None) -> None:
     }
     (OUT / "search.json").write_text(
         json.dumps(search, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    sources = ["건강보험심사평가원 병원정보서비스"]
+    if SCORING.exists():
+        scoring = json.loads(SCORING.read_text(encoding="utf-8"))
+        (OUT / "scoring.json").write_text(
+            json.dumps(scoring, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    sources =["건강보험심사평가원 병원정보서비스"]
     if primary_care_file:
         sources.append(f"국민건강보험공단 {primary_care_file}")
     sources.append("보건복지부·국립재활원 지정 기관 목록")
-    if any(rec["f"] for recs in by_region.values() for rec in recs):
+    if any(rec["f"] or rec["fx"] for recs in by_region.values() for rec in recs):
         sources.append("한국사회보장정보원 장애인편의시설 현황")
     now = datetime.now(timezone.utc)
     meta = {

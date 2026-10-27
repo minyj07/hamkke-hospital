@@ -2,11 +2,16 @@
 <!--
     안드로이드 11 이하의 자동 백업에서 뺄 파일. 12 이상은 data_extraction_rules.xml 을 쓴다.
     - last_search.json: 저장한 검색 조건 (장애 정보가 들어 있다, lib/data/last_search_store.dart)
-    - favorites.json: 즐겨찾기한 병원 (다니는 병원은 건강 정보다, lib/data/favorites.dart)
+    - favorites.json, recent_hospitals.json: 즐겨찾기·최근 본 병원 (다니는 병원은 건강 정보다, lib/data/saved_hospitals.dart)
+    - FlutterSecureStorage.xml, FlutterSecureKeyStorage.xml: 암호화한 진료 카드와 그 키 (lib/data/care_card_store.dart).
+      키는 안드로이드 Keystore 에 있어 다른 기기에서는 풀 수 없으므로 옮겨 봐야 쓸 수 없다.
     - hospital_data/: 내려받은 병원 데이터 (다시 받으면 된다, lib/data/data_store.dart)
 -->
 <full-backup-content>
     <exclude domain="file" path="last_search.json" />
     <exclude domain="file" path="favorites.json" />
+    <exclude domain="file" path="recent_hospitals.json" />
+    <exclude domain="sharedpref" path="FlutterSecureStorage.xml" />
+    <exclude domain="sharedpref" path="FlutterSecureKeyStorage.xml" />
     <exclude domain="file" path="hospital_data/" />
 </full-backup-content>

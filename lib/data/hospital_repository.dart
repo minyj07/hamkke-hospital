@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/hospital.dart';
 import '../services/hospital_search.dart';
+import '../services/score_weights.dart';
 import 'data_store.dart';
 import 'regions.dart';
 
@@ -17,6 +18,9 @@ abstract class HospitalRepository {
 
   /// 병원 이름 검색 색인 (전국).
   Future<List<SearchEntry>> loadSearchIndex();
+
+  /// 추천 점수표. 데이터에 없거나 읽지 못하면 앱에 든 기본값을 쓴다.
+  Future<ScoreWeights> loadWeights();
 
   /// [region] 시·도의 [id] 병원. 데이터에서 없어졌으면(문을 닫는 등) null.
   Future<Hospital?> findHospital(String region, String id);
@@ -54,6 +58,18 @@ class LocalHospitalRepository implements HospitalRepository {
   @override
   Future<List<SearchEntry>> loadSearchIndex() =>
       _load('search.json', (raw) => compute(parseSearchIndex, raw));
+
+  @override
+  Future<ScoreWeights> loadWeights() async {
+    try {
+      return await _load(
+          'scoring.json', (raw) => ScoreWeights.fromJson(jsonDecode(raw) as Map<String, dynamic>));
+    } catch (e) {
+      // 점수표가 없는 예전 데이터를 받았거나 망가졌으면 기본값으로 추천한다.
+      debugPrint('점수표를 읽지 못해 기본값을 써요: $e');
+      return ScoreWeights.standard;
+    }
+  }
 
   @override
   Future<Hospital?> findHospital(String region, String id) async =>

@@ -15,9 +15,10 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 
-  /// 저장한 검색 조건(last_search.json)과 내려받은 병원 데이터(hospital_data/)는 앱이
-  /// Application Support 에 둔다. 장애 정보가 들어 있고 다시 받으면 되는 데이터라 iCloud·컴퓨터
-  /// 백업에서 뺀다. 검색 조건은 저장할 때마다 새 파일로 바뀌므로 파일이 아니라 폴더에 표시한다.
+  /// 저장한 검색 조건(last_search.json), 즐겨찾기·최근 본 병원, 내려받은 병원 데이터(hospital_data/)는
+  /// 앱이 Application Support 에 둔다. 장애·건강 정보가 들어 있고 다시 받으면 되는 데이터라 iCloud·컴퓨터
+  /// 백업에서 뺀다. 파일은 저장할 때마다 새 파일로 바뀌므로 파일이 아니라 폴더에 표시한다.
+  /// 진료 카드는 키체인에 이 기기에서만 읽게(ThisDeviceOnly) 둔다 (lib/data/care_card_store.dart).
   /// 백업해야 하는 데이터가 생기면 이 폴더가 아닌 곳(Documents 등)에 둔다.
   private func excludeAppDataFromBackup() {
     let fileManager = FileManager.default

@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../data/favorites.dart';
-import '../data/hospital_repository.dart';
 import '../models/hospital.dart';
 import '../services/hospital_search.dart';
+import 'app_scope.dart';
+import 'data_notice.dart';
 import 'hospital_detail_screen.dart';
 import 'retry_message.dart';
 
 /// 조건을 고르지 않고 병원 이름(과 지역·종별)으로 바로 찾는 화면.
 class SearchScreen extends StatefulWidget {
-  const SearchScreen({super.key, required this.repository, required this.favorites});
-
-  final HospitalRepository repository;
-  final Favorites favorites;
+  const SearchScreen({super.key});
 
   @override
   State<SearchScreen> createState() => _SearchScreenState();
@@ -22,6 +19,7 @@ class _SearchScreenState extends State<SearchScreen> {
   /// 한 번에 보여줄 결과 수. 더 많으면 검색어를 좁히게 한다.
   static const _shown = 50;
 
+  late final _repository = AppScope.of(context).repository;
   late Future<(List<SearchEntry>, Map<String, String>)> _data = _load();
   final _query = TextEditingController();
   bool _opening = false;
@@ -29,7 +27,7 @@ class _SearchScreenState extends State<SearchScreen> {
   /// 검색 색인과 시·도 코드 → 이름.
   Future<(List<SearchEntry>, Map<String, String>)> _load() async {
     final (entries, regions) =
-        await (widget.repository.loadSearchIndex(), widget.repository.loadRegions()).wait;
+        await (_repository.loadSearchIndex(), _repository.loadRegions()).wait;
     return (entries, {for (final r in regions) r.code: r.name});
   }
 
@@ -45,7 +43,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() => _opening = true);
     Hospital? hospital;
     try {
-      hospital = await widget.repository.findHospital(e.region, e.id);
+      hospital = await _repository.findHospital(e.region, e.id);
     } catch (_) {
       // 아래에서 안내한다.
     }
@@ -58,7 +56,7 @@ class _SearchScreenState extends State<SearchScreen> {
       return;
     }
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => HospitalDetailScreen(hospital: hospital!, favorites: widget.favorites),
+      builder: (_) => HospitalDetailScreen(hospital: hospital!),
     ));
   }
 
@@ -144,6 +142,10 @@ class _SearchScreenState extends State<SearchScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _open(e),
           ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: DataNotice(),
+        ),
       ],
     );
   }

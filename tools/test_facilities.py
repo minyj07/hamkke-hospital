@@ -75,20 +75,27 @@ class EvalTest(unittest.TestCase):
     def test_가짜_응답은_읽지_않는다(self):
         self.assertIsNone(parse_eval(DUMMY))
 
-    def test_휠체어는_입구가_모두_갖춰지고_승강기가_있거나_1층일_때만(self):
-        self.assertIn("wheelchair", eval_facilities(parse_eval(FULL), "서울 신촌로 157, 3층"))
-        self.assertNotIn("wheelchair", eval_facilities(parse_eval(NO_ELEVATOR), "서울 신촌로 157, 3층"))
-        self.assertIn("wheelchair", eval_facilities(parse_eval(NO_ELEVATOR), "서울 신촌로 157, 1층 101호"))
-        self.assertNotIn("wheelchair", eval_facilities(parse_eval(NO_ELEVATOR), "서울 신촌로 157, 1층, 2층"))
-        self.assertNotIn("wheelchair", eval_facilities(parse_eval(NO_ELEVATOR), "서울 신촌로 157, 지하1층"))
-        self.assertNotIn("wheelchair", eval_facilities(parse_eval(NO_ELEVATOR), "서울 신촌로 157"))
-        no_door = parse_eval(FULL) - {"주출입구(문)"}
-        self.assertNotIn("wheelchair", eval_facilities(no_door, "서울 신촌로 157, 1층"))
+    def test_휠체어는_입구가_모두_갖춰지고_승강기가_있거나_1층일_때만_있다(self):
+        def wheelchair(eval_text: str | set[str], address: str) -> str:
+            items = parse_eval(eval_text) if isinstance(eval_text, str) else eval_text
+            present, absent = eval_facilities(items, address)
+            return "있음" if "wheelchair" in present else "없음" if "wheelchair" in absent else "모름"
 
-    def test_기구표_항목을_앱의_편의시설로_바꾼다(self):
+        self.assertEqual(wheelchair(FULL, "서울 신촌로 157, 3층"), "있음")
+        self.assertEqual(wheelchair(NO_ELEVATOR, "서울 신촌로 157, 3층"), "없음")
+        self.assertEqual(wheelchair(NO_ELEVATOR, "서울 신촌로 157, 1층 101호"), "있음")
+        self.assertEqual(wheelchair(NO_ELEVATOR, "서울 신촌로 157, 1층, 2층"), "없음")
+        self.assertEqual(wheelchair(NO_ELEVATOR, "서울 신촌로 157, 지하1층"), "없음")
+        # 입구는 갖췄는데 승강기가 없고 층을 모르면 없다고 하지 않는다.
+        self.assertEqual(wheelchair(NO_ELEVATOR, "서울 신촌로 157"), "모름")
+        no_door = parse_eval(FULL) - {"주출입구(문)"}
+        self.assertEqual(wheelchair(no_door, "서울 신촌로 157, 1층"), "없음")
+
+    def test_기구표_항목을_앱의_편의시설로_바꾸고_없는_것도_적는다(self):
         self.assertEqual(eval_facilities(parse_eval(FULL), "서울 신촌로 157"),
-                         {"wheelchair", "parking", "toilet"})
-        self.assertEqual(eval_facilities({"유도및안내설비"}, ""), {"braille"})
+                         ({"wheelchair", "parking", "toilet"}, {"braille"}))
+        self.assertEqual(eval_facilities({"유도및안내설비"}, ""),
+                         ({"braille"}, {"parking", "toilet", "wheelchair"}))
 
 
 class MergeTest(unittest.TestCase):
@@ -110,9 +117,11 @@ class MergeTest(unittest.TestCase):
         ])
 
         self.assertEqual(clinic3["f"], {"wheelchair", "parking", "toilet"})
+        self.assertEqual(clinic3["fx"], {"braille"})
         self.assertEqual(clinic5["f"], {"wheelchair", "parking", "toilet"})
-        self.assertEqual(other_gu["f"], set())
+        self.assertEqual((other_gu["f"], other_gu["fx"]), (set(), set()))
         self.assertEqual(ground["f"], {"wheelchair", "toilet"})
+        self.assertEqual(ground["fx"], {"parking", "braille"})
         self.assertEqual(gijang["f"], {"parking"})  # 가짜 응답은 버리고 진짜 기구표만 썼다
         self.assertIn("병원 4곳에 연결", out)
         self.assertIn("가짜 응답 1건", out)
@@ -126,6 +135,8 @@ class MergeTest(unittest.TestCase):
         merge(b, [("서울특별시 서대문구 신촌로 157", FULL),
                   ("서울특별시 서대문구 신촌로 157", NO_ELEVATOR)])
         self.assertEqual(clinic["f"], {"toilet"})
+        # 주차장·승강기는 기구표마다 달라서 있다고도 없다고도 하지 않는다.
+        self.assertEqual(clinic["fx"], {"braille"})
 
     def test_기구표가_없으면_건너뛴다(self):
         b = Builder()
@@ -147,8 +158,9 @@ class MergeTest(unittest.TestCase):
             build_data.write_outputs(b, None)
             hospitals = json.loads((Path(tmp) / "hospitals" / "110000.json").read_text(encoding="utf-8"))
             meta = json.loads((Path(tmp) / "meta.json").read_text(encoding="utf-8"))
-        facilities = {h["n"]: h.get("f") for h in hospitals}
-        self.assertEqual(facilities, {"화영내과의원": ["parking", "toilet", "wheelchair"], "연세의원": None})
+        facilities = {h["n"]: (h.get("f"), h.get("fx")) for h in hospitals}
+        self.assertEqual(facilities, {"화영내과의원": (["parking", "toilet", "wheelchair"], ["braille"]),
+                                      "연세의원": (None, None)})
         self.assertIn("한국사회보장정보원 장애인편의시설 현황", meta["sources"])
 
 
