@@ -1,0 +1,30 @@
+{
+ "schema": 1,
+ "version": "2026-10-27T05:54:53Z",
+ "generatedAt": "2026-10-27",
+ "hospitalCount": 61730,
+ "sources": [
+  "건강보험심사평가원 병원정보서비스",
+  "국민건강보험공단 국민건강보험공단_장애인 건강주치의 의료기관 목록_20250721",
+  "보건복지부·국립재활원 지정 기관 목록"
+ ],
+ "files": {
+  "regions.json": "362715c24e245eea4752de22c9a8fe399ab2d1f63f308bdfc3df129dc92c26a2",
+  "hospitals/110000.json": "d791b38b21702004852d8e56e78df7c9ab2d4e74f3e5b458842f59460c96cde3",
+  "hospitals/210000.json": "b48f13627a1cabacb9f9f2acf6035c2cb2481234ffb3b52093dde8b13f36c502",
+  "hospitals/220000.json": "b3cdf74c1b51f9e36e7093a72086d01007cf415ee9c5aa34c4c2e7fd6e83751f",
+  "hospitals/230000.json": "b9467e11e0d8f3a72a0faf5b3d740f813971ff22874f25941810ccc0199d47c9",
+  "hospitals/250000.json": "953a8f8807c96014c9626a4fd8a2d71599c1aa2a75ebba3253f70011c8833ea1",
+  "hospitals/260000.json": "840a09e989b81914c505404df019be0f9966ce6996f45a2987f4f8ad9488ce47",
+  "hospitals/310000.json": "bfa2b10226794784c2a3ddfb807eb29dbc5428531b734732d39403eb575064f3",
+  "hospitals/320000.json": "c9ad04c35bca10673a2389efab6f6b158a72721bfd1e1d111cc9e7ab9a637503",
+  "hospitals/330000.json": "167f8a9c554ea87861760f4639e01c56ced31b618e879d80f5254209b8a646f2",
+  "hospitals/340000.json": "bd964ff8615a704e121d126cab46b93f040af2470fd15ac90ee7687d39c8fb62",
+  "hospitals/350000.json": "b7ad23d813b3dfd43ed403929a10c64eaacc884632d56a4ac018c932992b256d",
+  "hospitals/360000.json": "acbecaf7004970c59dad777873a4c3b6a5f71eed803753e91e6774f89b47b23a",
+  "hospitals/370000.json": "4cd7c7af7b93777b9609a6ec86542086ad5f1f8db6019068ffed09846a45c19f",
+  "hospitals/380000.json": "5017943e1181121f8ef06b5696da467ad4715d3bac1f8dbcbe291d1d028cfc3d",
+  "hospitals/390000.json": "2c8351f5147a6f68b10c6cb462afdede2d5a8fc363a1475630eeb5f6ed83b015",
+  "hospitals/410000.json": "bee4bcc04bf6f0553e50fb08edfda543abb72cf123fb8d663b13cfd50de7c8ee"
+ }
+}

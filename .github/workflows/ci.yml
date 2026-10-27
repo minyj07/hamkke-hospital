@@ -1,0 +1,48 @@
+# PR 과 푸시마다 앱과 데이터 스크립트를 검사한다.
+#   앱: flutter analyze, flutter test
+#   스크립트: tools/ 의 Python 테스트, 앱에 든 데이터(assets/data)와 meta.json 이 맞는지
+# Flutter 버전은 개발 환경과 같게 둔다. Flutter 를 올리면 여기 버전도 함께 바꾼다.
+name: 테스트
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# 같은 브랜치에 다시 푸시하면 끝나지 않은 이전 실행은 멈춘다.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    name: 앱 (Flutter)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # 외부 액션은 태그가 바뀌어도 같은 코드를 쓰도록 커밋으로 고정한다 (v2.23.0).
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2
+        with:
+          flutter-version: "3.47.8"
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  python:
+    name: 데이터 스크립트 (Python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: 스크립트 테스트
+        run: python -m unittest discover -s tools
+      - name: 앱에 든 데이터 검사
+        run: python tools/verify_data.py

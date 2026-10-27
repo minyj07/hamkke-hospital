@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    안드로이드 12 이상의 백업·기기 이전에서 뺄 파일. 11 이하는 backup_rules.xml 을 쓴다.
+    - last_search.json: 저장한 검색 조건 (장애 정보가 들어 있다, lib/data/last_search_store.dart)
+    - hospital_data/: 내려받은 병원 데이터 (다시 받으면 된다, lib/data/data_store.dart)
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="last_search.json" />
+        <exclude domain="file" path="hospital_data/" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="last_search.json" />
+        <exclude domain="file" path="hospital_data/" />
+    </device-transfer>
+</data-extraction-rules>

@@ -1,0 +1,157 @@
+﻿category,region,hira_name,address_hint,label,source
+rehabHospital,110000,국립재활원,삼각산로 58,국립재활원,nrc-rehab
+rehabHospital,220000,경인권역재활병원,원인재로 263,권역재활병원 (경인권),nrc-rehab
+rehabHospital,250000,충남대학교병원,문화로 282,대전충청권역 의료재활센터,nrc-rehab
+rehabHospital,360000,호남권역재활병원,하서로 590,권역재활병원 (호남권),nrc-rehab
+rehabHospital,390000,제주권역재활병원,동문로 1,권역재활병원 (제주권),nrc-rehab
+rehabHospital,320000,강원특별자치도재활병원,충열로142번길,권역재활병원 (강원권),nrc-rehab
+rehabHospital,370000,경북권역재활병원,미래로 120,권역재활병원 (경북권),nrc-rehab
+rehabHospital,380000,양산부산대학교병원,금오로 20,영남권역재활병원,nrc-rehab
+rehabDesignated,110000,국립재활원,삼각산로 58,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,로이병원,평창문화로 75,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,서울재활병원,갈현로11길 30,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,서울큰나무병원,강서로 206,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,서울퍼스트병원,은천로 51,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,송파드림재활병원,송이로 111,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,의료법인 서울효천의료재단 에이치플러스재활자립병원,공원로6가길 4,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,의료법인 춘혜의료재단 명지춘혜재활병원,대림로 223,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,제니스병원,자양로 215,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,청담병원,삼성로147길 46,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,110000,포근한재활병원,도봉로 266,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,210000,동아대학교대신병원,대신공원로 26,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,210000,워크재활병원,충렬대로 379,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,210000,의료법인영재의료재단 큰솔병원,대동로 141,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,210000,의료법인정화의료재단봉생힐링병원,양지골로 241,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,210000,재단법인 일신기독교선교회 맥켄지일신재활병원,금곡대로 133,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,210000,파크사이드재활의학병원,유엔평화로125번길,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,210000,해운대나눔과행복병원,좌동순환로 502,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,230000,남산병원,남산로13길 9,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,230000,대구보건대학교병원,팔거천동로 209,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,230000,미래병원,신암로 55,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,230000,의료법인 대구의료재단 케이병원,칠곡중앙대로 357,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,230000,의료법인상보의료재단 대구경상병원,달구벌대로 1762,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,230000,의료법인해정의료재단더좋은병원,명덕로 443,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,220000,미추홀병원,남동대로799번길 25,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,220000,브래덤재활병원,예술로192번길 36,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,220000,서송병원,경명대로972번길 9,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,360000,광주365재활병원,하남마항로 26,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,360000,우암병원,동문대로248번길 10,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,360000,호남권역재활병원,하서로 590,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,250000,다빈치병원,계룡로553번길 60,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,250000,대전웰니스병원,동서대로1777번길,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,250000,사회복지법인 성화 대전재활병원,문화원로146번길,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,250000,의료법인 밝은마음의료재단 워크런재활병원,온천동로 43,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,250000,의료법인 리노의료재단 유성웰니스재활병원,온천동로 15,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,260000,북울산병원,신답로 37,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,국립교통재활병원,중앙로 260,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,로체스터병원,호국로1519번길,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,린병원,포은대로59번길 15,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,마스터플러스병원,신흥로 84,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,바로웰병원,현암로 72,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,베데스다재활병원,봉영로 1623,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,분당베스트병원,성남대로926번길 6,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,수원센텀병원,호매실로90번길 76,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,에스알씨(SRC)재활병원,경수길 25,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,위례재활병원,위례서일로 6,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,윤강병원,덕영대로1483번길 12,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,의료법인기상의료재단카이저병원,건원대로 44,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,일산복음재활병원,고양대로 760,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,일산중심재활병원,미래로 227,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,해성병원,경수대로 542,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,310000,휴앤유병원,심곡로10번길 63,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,320000,강원특별자치도재활병원,충열로142번길,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,320000,영광재활병원,오리현길 236,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,330000,씨엔씨푸른병원,2순환로 1234,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,330000,아이엠재활병원,청남로 2140,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,330000,의료법인송암의료재단마이크로재활병원,사직대로 26,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,330000,첼로병원,향군로 132,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,340000,천안재활병원,쌍용대로 225,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,340000,SG삼성조은병원,불당25로 200,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,350000,드림솔병원,천잠로 507,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,370000,경북권역재활병원,미래로 120,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,370000,의료법인 갑을의료재단 갑을구미재활병원,3공단1로 280,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,370000,의료법인 승미의료재단 구미으뜸재활병원,금오산로 198,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,370000,의료법인 인덕의료재단 복주회복병원,함백이길 154,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,380000,바른재활병원,창원천로94번길 82,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,380000,예손재활의학과병원,진주대로 839,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,380000,의료법인희원의료재단 래봄병원,분성로 202,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,380000,희연재활병원,원이대로393번길 25,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+rehabDesignated,390000,제주권역재활병원,동문로 1,"재활의료기관 (보건복지부 제3기 지정, 2026~2029)",mohw-rehab3
+childRehab,250000,대전세종충남·넥슨후원 공공어린이재활병원,도안중로 133,공공어린이재활병원,nrc-child
+childRehab,360000,호남권역재활병원,하서로 590,공공어린이재활의료센터,nrc-child
+childRehab,360000,의료법인목포구암의료재단 목포중앙병원,영산로 623,공공어린이재활의료센터,nrc-child
+childRehab,320000,강원특별자치도재활병원,충열로142번길,공공어린이재활의료센터,nrc-child
+childRehab,320000,강원특별자치도원주의료원,서원대로 387,공공어린이재활의료센터,nrc-child
+childRehab,230000,계명대학교동산병원,달구벌대로 1035,공공어린이재활의료센터,nrc-child
+childRehab,370000,경상북도안동의료원,태사2길 55,공공어린이재활의료센터,nrc-child
+childRehab,330000,충청북도 청주의료원,흥덕로 48,공공어린이재활의료센터,nrc-child
+childRehab,350000,재단법인예수병원유지재단예수병원,서원로 365,공공어린이재활의료센터,nrc-child
+childRehab,110000,서울재활병원,갈현로11길 30,어린이 재활 지정병원,nrc-child
+childRehab,310000,국민건강보험공단일산병원,일산로 100,어린이 재활 지정병원,nrc-child
+childRehab,390000,제주권역재활병원,동문로 1,공공어린이재활의료센터,nrc-child
+dentalCenter,110000,서울대학교치과병원,대학로 101,중앙장애인구강진료센터,mohw-dental
+dentalCenter,110000,연세대학교치과대학치과병원,연세로 50-1,장애인구강진료센터 (서울 권역),mohw-dental
+dentalCenter,210000,부산대학교병원,구덕로 179,장애인구강진료센터 (부산 권역),mohw-dental
+dentalCenter,230000,경북대학교치과병원,달구벌대로 2175,장애인구강진료센터 (대구 권역),mohw-dental
+dentalCenter,220000,의료법인 길의료재단 길병원,남동대로774번길,장애인구강진료센터 (인천 권역),mohw-dental
+dentalCenter,360000,전남대학교치과병원,용봉로 33,장애인구강진료센터 (광주·전남 권역),mohw-dental
+dentalCenter,250000,원광대학교 대전치과병원,둔산로 77,장애인구강진료센터 (대전 권역),mohw-dental
+dentalCenter,260000,학교법인 울산공업학원 울산대학교병원,대학병원로 25,장애인구강진료센터 (울산 권역),mohw-dental
+dentalCenter,410000,단국대학교 치과대학 세종치과병원,도움8로 87,장애인구강진료센터 (세종 권역),mohw-dental
+dentalCenter,310000,단국대학교 치과대학 죽전치과병원,죽전로 152,장애인구강진료센터 (경기 권역),mohw-dental
+dentalCenter,310000,의료법인명지의료재단명지병원,화수로14번길 55,장애인구강진료센터 (경기 북부 권역),mohw-dental
+dentalCenter,320000,강원대학교치과병원,죽헌길 7,장애인구강진료센터 (강원 권역),mohw-dental
+dentalCenter,330000,의료법인 인화재단 한국병원,단재로 106,장애인구강진료센터 (충북 권역),mohw-dental
+dentalCenter,340000,단국대학교치과대학치과병원,단대로 119,장애인구강진료센터 (충남 권역),mohw-dental
+dentalCenter,350000,전북대학교치과병원,건지로 20,장애인구강진료센터 (전북 권역),mohw-dental
+dentalCenter,380000,부산대학교치과병원,금오로 20,장애인구강진료센터 (경남 권역),mohw-dental
+dentalCenter,390000,제주대학교병원,아란13길 15,장애인구강진료센터 (제주 권역),mohw-dental
+dentalCenter,370000,의료법인안동병원,앙실로 11,장애인구강진료센터 (경북 권역),mohw-dental
+dentalCenter,360000,전라남도 순천의료원,서문성터길 2,장애인구강진료센터 (광주·전남 권역),mohw-dental
+dentalCenter,110000,서울특별시장애인치과병원,마장로 207,서울시 장애인치과병원,hira-name
+dentalCenter,110000,서울특별시 서부장애인치과병원,공항대로 489,서울시 장애인치과병원,hira-name
+friendlyCheckup,110000,서울특별시서울의료원,신내로 156,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,110000,국립재활원,삼각산로 58,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,110000,서울적십자병원,새문안로 9,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,210000,부산광역시의료원,월드컵대로 359,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,210000,부산성모병원(재단법인 천주교부산교구유지재단),용호로232번길,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,210000,연제일신병원,고분로 6,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,210000,의료법인 은성의료재단 좋은삼선병원,가야대로 326,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,230000,대구의료원,평리로 157,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,220000,인천광역시의료원,방축로 217,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,220000,국제바로병원,석정로 518,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,250000,대청병원,계백로 1322,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,310000,경기도의료원 수원병원,수성로245번길 69,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,310000,성남시의료원,수정로171번길 10,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,310000,경기도의료원 이천병원,경충대로 2742,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,310000,경기도의료원파주병원,중앙로 207,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,310000,경기도의료원의정부병원,흥선로 142,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,310000,경기도의료원포천병원,포천로 1648,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,350000,전북특별자치도 남원의료원,충정로 365,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,360000,전라남도 순천의료원,서문성터길 2,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,360000,전라남도 강진의료원,탐진로 5,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,360000,목포시의료원,이로로 18,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,360000,장흥통합의료병원,로하스로 121,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,360000,우리동네의원,무진대로211번길 28,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,370000,경북권역재활병원,미래로 120,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,370000,경상북도안동의료원,태사2길 55,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,370000,의료법인안동병원,앙실로 11,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,380000,경상남도마산의료원,3·15대로 231,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,380000,의료법인환명의료재단 조은금강병원,김해대로 1814,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,380000,양산부산대학교병원,금오로 20,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,380000,밀양병원,밀양대로 1823,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,390000,제주특별자치도 서귀포의료원,장수로 47,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,390000,의료법인 중앙의료재단 중앙병원,월랑로 91,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,330000,충청북도 청주의료원,흥덕로 48,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,330000,충청북도 충주의료원,안림로 239,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,340000,충청남도 서산의료원,중앙로 149,장애친화 건강검진기관,nrc-checkup
+friendlyCheckup,320000,강원특별자치도영월의료원,중앙1로 59,장애친화 건강검진기관,nrc-checkup
+friendlyObgyn,110000,서울대학교병원,대학로 101,장애친화 산부인과,news-obgyn-seoul
+friendlyObgyn,110000,이화여자대학교의과대학부속목동병원,안양천로 1071,장애친화 산부인과,news-obgyn-seoul
+friendlyObgyn,110000,성애의료재단 성애병원,여의대방로53길 22,장애친화 산부인과,news-obgyn-seoul
+friendlyObgyn,330000,건국대학교 충주병원,국원대로 82,장애친화 산부인과,news-obgyn-chungju
+mentalHealthCenter,110000,국립정신건강센터,용마산로 127,국립 정신건강 전문기관,mohw-org
+mentalHealthCenter,360000,국립나주병원,세남로 1328,국립 정신건강 전문기관,mohw-org
+mentalHealthCenter,380000,국립부곡병원,부곡로 145,국립 정신건강 전문기관,mohw-org
+mentalHealthCenter,320000,국립춘천병원,영서로 824,국립 정신건강 전문기관,mohw-org
+mentalHealthCenter,340000,국립공주병원,고분티로 623,국립 정신건강 전문기관,mohw-org

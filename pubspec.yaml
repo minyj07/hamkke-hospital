@@ -1,0 +1,30 @@
+name: hamkke_hospital
+description: "함께병원 - 장애 유형과 필요한 진료에 맞는 병원을 추천합니다."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  url_launcher: ^6.3.3
+  geolocator: ^14.1.1
+  http: ^1.6.0
+  path_provider: ^2.1.6
+  crypto: ^3.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/data/
+    - assets/data/hospitals/
