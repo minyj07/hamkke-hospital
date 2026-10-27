@@ -3,14 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../data/data_store.dart';
+import '../data/favorites.dart';
 import '../data/hospital_repository.dart';
 import '../data/last_search_store.dart';
 import '../data/regions.dart';
 import '../models/disability.dart';
 import '../models/search_conditions.dart';
 import '../services/location.dart';
+import 'favorites_screen.dart';
 import 'results_screen.dart';
 import 'retry_message.dart';
+import 'search_screen.dart';
 
 /// 장애 유형 → 정도 → 필요한 진료 → 시·도(또는 현재 위치) → 시·군·구 순서로 묻는 화면.
 /// 지난번에 찾은 조건이 있으면 맨 위에서 바로 다시 찾을 수 있다.
@@ -20,11 +23,13 @@ class ProfileScreen extends StatefulWidget {
     required this.repository,
     required this.locationService,
     required this.searchStore,
+    required this.favorites,
   });
 
   final HospitalRepository repository;
   final LocationService locationService;
   final LastSearchStore searchStore;
+  final Favorites favorites;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -157,6 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => ResultsScreen(
           repository: widget.repository,
+          favorites: widget.favorites,
           profile: c.toProfile(
             region: region,
             district: district,
@@ -207,6 +213,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
               )
             : null,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: '병원 이름으로 찾기',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => SearchScreen(
+                repository: widget.repository,
+                favorites: widget.favorites,
+              ),
+            )),
+          ),
+          IconButton(
+            icon: const Icon(Icons.star_border),
+            tooltip: '즐겨찾기',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => FavoritesScreen(
+                repository: widget.repository,
+                favorites: widget.favorites,
+              ),
+            )),
+          ),
           IconButton(
             icon: const Icon(Icons.update),
             tooltip: '병원 정보 업데이트',

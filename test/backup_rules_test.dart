@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hamkke_hospital/data/data_store.dart';
+import 'package:hamkke_hospital/data/favorites.dart';
 import 'package:hamkke_hospital/data/last_search_store.dart';
 
 /// 휴대폰 백업에서 빼는 설정이 앱이 실제로 쓰는 파일과 맞는지 본다.
@@ -13,12 +14,14 @@ void main() {
     final xml =
         File('android/app/src/main/res/xml/data_extraction_rules.xml').readAsStringSync();
     expect(count(xml, 'path="$lastSearchFileName"'), 2);
+    expect(count(xml, 'path="$favoritesFileName"'), 2);
     expect(count(xml, 'path="$dataDirectoryName/"'), 2);
   });
 
   test('안드로이드 11 이하: 자동 백업에서 뺀다', () {
     final xml = File('android/app/src/main/res/xml/backup_rules.xml').readAsStringSync();
     expect(count(xml, 'path="$lastSearchFileName"'), 1);
+    expect(count(xml, 'path="$favoritesFileName"'), 1);
     expect(count(xml, 'path="$dataDirectoryName/"'), 1);
   });
 

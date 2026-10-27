@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hamkke_hospital/data/data_store.dart';
+import 'package:hamkke_hospital/data/favorites.dart';
 import 'package:hamkke_hospital/data/hospital_repository.dart';
 import 'package:hamkke_hospital/data/last_search_store.dart';
 import 'package:hamkke_hospital/data/regions.dart';
@@ -8,15 +9,59 @@ import 'package:hamkke_hospital/main.dart';
 import 'package:hamkke_hospital/models/disability.dart';
 import 'package:hamkke_hospital/models/hospital.dart';
 import 'package:hamkke_hospital/models/search_conditions.dart';
+import 'package:hamkke_hospital/services/hospital_search.dart';
 import 'package:hamkke_hospital/services/location.dart';
 
+const defaultHospitals = [
+  Hospital(
+    id: 'h1',
+    name: '강남재활의학과의원',
+    region: '110000',
+    kind: '의원',
+    district: '강남구',
+    address: '서울특별시 강남구 테헤란로 1',
+    phone: '02-000-0000',
+    lat: 37.5175,
+    lng: 127.0470,
+    doctors: 5,
+    specialists: 3,
+    openedYear: 2015,
+    homepage: 'http://gangnam.example',
+    departments: {'재활의학과'},
+  ),
+  Hospital(
+    id: 'h2',
+    name: '강남안과의원',
+    region: '110000',
+    address: '서울특별시 강남구 테헤란로 2',
+    lat: 37.5175,
+    lng: 127.0470,
+    departments: {'안과'},
+  ),
+  Hospital(
+    id: 'h3',
+    name: '강남피부과의원',
+    region: '110000',
+    kind: '의원',
+    district: '강남구',
+    address: '서울특별시 강남구 테헤란로 3',
+    lat: 37.5175,
+    lng: 127.0470,
+    departments: {'피부과'},
+  ),
+];
+
 class FakeRepository implements HospitalRepository {
-  FakeRepository({this.updateResult = UpdateResult.upToDate});
+  FakeRepository({
+    this.updateResult = UpdateResult.upToDate,
+    this.hospitals = defaultHospitals,
+  });
 
   static const gangnam = Area('강남구', 37.5172, 127.0473);
 
   /// update() 가 돌려줄 결과. updated 면 기준일이 2026-10-26 으로 바뀐다.
   final UpdateResult updateResult;
+  final List<Hospital> hospitals;
   var _generatedAt = '2026-10-07';
 
   @override
@@ -31,39 +76,22 @@ class FakeRepository implements HospitalRepository {
       ];
 
   @override
-  Future<List<Hospital>> loadHospitals(String regionCode) async => const [
-        Hospital(
-          id: 'h1',
-          name: '강남재활의학과의원',
-          kind: '의원',
-          district: '강남구',
-          address: '서울특별시 강남구 테헤란로 1',
-          phone: '02-000-0000',
-          lat: 37.5175,
-          lng: 127.0470,
-          departments: {'재활의학과'},
-        ),
-        Hospital(
-          id: 'h2',
-          name: '강남안과의원',
-          address: '서울특별시 강남구 테헤란로 2',
-          lat: 37.5175,
-          lng: 127.0470,
-          departments: {'안과'},
-        ),
-        Hospital(
-          id: 'h3',
-          name: '강남피부과의원',
-          address: '서울특별시 강남구 테헤란로 3',
-          lat: 37.5175,
-          lng: 127.0470,
-          departments: {'피부과'},
-        ),
-      ];
+  Future<List<Hospital>> loadHospitals(String regionCode) async => hospitals;
 
   @override
   Future<DataInfo> loadInfo() async =>
       DataInfo(generatedAt: _generatedAt, sources: const ['테스트 자료']);
+
+  @override
+  Future<List<SearchEntry>> loadSearchIndex() async => [
+        for (final h in hospitals)
+          SearchEntry(
+              id: h.id, name: h.name, region: h.region, district: h.district, kind: h.kind),
+      ];
+
+  @override
+  Future<Hospital?> findHospital(String region, String id) async =>
+      hospitals.where((h) => h.id == id).firstOrNull;
 
   @override
   Future<UpdateResult> update() async {
@@ -126,6 +154,16 @@ class FakeSearchStore implements LastSearchStore {
   Future<void> clear() async => saved = null;
 }
 
+class FakeFavoritesStore implements FavoritesStore {
+  List<FavoriteHospital> saved = [];
+
+  @override
+  Future<List<FavoriteHospital>> load() async => saved;
+
+  @override
+  Future<void> save(List<FavoriteHospital> favorites) async => saved = favorites;
+}
+
 const gangnamRehab = SearchConditions(
   types: {DisabilityType.physical},
   severity: Severity.severe,
@@ -140,11 +178,13 @@ Widget app({
   HospitalRepository? repository,
   LocationService? locationService,
   LastSearchStore? searchStore,
+  Favorites? favorites,
 }) =>
     HamkkeApp(
       repository: repository ?? FakeRepository(),
       locationService: locationService ?? FakeLocationService(here),
       searchStore: searchStore ?? FakeSearchStore(),
+      favorites: favorites ?? Favorites(FakeFavoritesStore()),
     );
 
 void main() {
@@ -457,5 +497,130 @@ void main() {
     expect(find.textContaining('다른 지역이나 진료를 골라 보세요'), findsOneWidget);
     expect(find.textContaining('0곳'), findsNothing);
     expect(find.textContaining('직선거리'), findsNothing);
+  });
+
+  testWidgets('병원 상세에 의사 수·개원 연도·홈페이지와 길찾기·공유 버튼이 나온다', (tester) async {
+    await tester.pumpWidget(app(searchStore: FakeSearchStore(gangnamRehab)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이 조건으로 다시 찾기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('강남재활의학과의원'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('의사 5명'), findsOneWidget);
+    expect(find.text('그중 전문의 3명'), findsOneWidget);
+    expect(find.text('2015년 개원'), findsOneWidget);
+    expect(find.text('http://gangnam.example'), findsOneWidget);
+    expect(find.text('길찾기'), findsOneWidget);
+    expect(find.text('공유하기'), findsOneWidget);
+    expect(find.text('추천 이유'), findsOneWidget);
+  });
+
+  testWidgets('병원 이름으로 찾아 바로 상세를 연다', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.tap(find.byTooltip('병원 이름으로 찾기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('병원 이름이나 지역을 입력하세요'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '없는병원');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('찾는 병원이 없어요'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '강남 피부');
+    await tester.pumpAndSettle();
+    expect(find.text('1곳을 찾았어요.'), findsOneWidget);
+    expect(find.text('의원 · 서울특별시 강남구'), findsOneWidget);
+
+    await tester.tap(find.text('강남피부과의원'));
+    await tester.pumpAndSettle();
+    expect(find.text('서울특별시 강남구 테헤란로 3'), findsOneWidget);
+    // 추천에서 연 게 아니므로 거리와 추천 이유는 없다.
+    expect(find.text('추천 이유'), findsNothing);
+    expect(find.textContaining('km'), findsNothing);
+  });
+
+  testWidgets('즐겨찾기에 넣고, 목록에서 열고, 뺀다', (tester) async {
+    final store = FakeFavoritesStore();
+    await tester.pumpWidget(app(favorites: Favorites(store)));
+    await tester.tap(find.byTooltip('즐겨찾기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('즐겨찾기한 병원이 없어요'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('병원 이름으로 찾기'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), '피부');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('강남피부과의원'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('즐겨찾기에 넣기'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('즐겨찾기에서 빼기'), findsOneWidget);
+    expect(store.saved.single.name, '강남피부과의원');
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('즐겨찾기'));
+    await tester.pumpAndSettle();
+    expect(find.text('강남피부과의원'), findsOneWidget);
+
+    await tester.tap(find.text('강남피부과의원'));
+    await tester.pumpAndSettle();
+    expect(find.text('서울특별시 강남구 테헤란로 3'), findsOneWidget);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('강남피부과의원 즐겨찾기에서 빼기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('즐겨찾기한 병원이 없어요'), findsOneWidget);
+    expect(store.saved, isEmpty);
+  });
+
+  testWidgets('결과를 가까운 순으로 바꾸고 지정 기관만 볼 수 있다', (tester) async {
+    double top(String text) => tester.getTopLeft(find.text(text)).dy;
+    await tester.pumpWidget(app(
+      searchStore: FakeSearchStore(gangnamRehab),
+      repository: FakeRepository(hospitals: const [
+        Hospital(
+          id: 'near',
+          name: '가까운재활의원',
+          region: '110000',
+          address: '서울특별시 강남구 1',
+          lat: 37.5175,
+          lng: 127.0470,
+          departments: {'재활의학과'},
+        ),
+        Hospital(
+          id: 'far',
+          name: '먼재활병원',
+          region: '110000',
+          address: '서울특별시 노원구 1',
+          lat: 37.6,
+          lng: 127.0470,
+          departments: {'재활의학과'},
+          categories: {InstitutionCategory.rehabDesignated},
+        ),
+      ]),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이 조건으로 다시 찾기'));
+    await tester.pumpAndSettle();
+
+    // 추천순: 지정 재활의료기관이 멀어도 먼저
+    expect(top('먼재활병원'), lessThan(top('가까운재활의원')));
+
+    await tester.tap(find.text('가까운 순'));
+    await tester.pumpAndSettle();
+    expect(top('가까운재활의원'), lessThan(top('먼재활병원')));
+    expect(find.textContaining('조건에 맞는 병원 중 가까운 2곳이에요'), findsOneWidget);
+
+    await tester.tap(find.text('지정 기관만'));
+    await tester.pumpAndSettle();
+    expect(find.text('가까운재활의원'), findsNothing);
+    expect(find.text('먼재활병원'), findsOneWidget);
+    expect(find.textContaining('정부 지정 기관만 보여줘요'), findsOneWidget);
   });
 }

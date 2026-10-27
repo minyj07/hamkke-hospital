@@ -62,9 +62,14 @@ class Hospital {
     required this.address,
     required this.lat,
     required this.lng,
+    this.region = '',
     this.kind = '',
     this.district = '',
     this.phone = '',
+    this.doctors = 0,
+    this.specialists = 0,
+    this.openedYear,
+    this.homepage = '',
     this.departments = const {},
     this.categories = const {},
     this.facilities = const {},
@@ -73,6 +78,9 @@ class Hospital {
 
   final String id;
   final String name;
+
+  /// 시·도 코드 (예: 110000). 시·도 파일을 읽을 때 정한다.
+  final String region;
 
   /// 종별 (예: 의원, 종합병원, 치과의원).
   final String kind;
@@ -84,6 +92,16 @@ class Hospital {
   final double lat;
   final double lng;
 
+  /// 의사 수와 그중 전문의 수 (의과·치과·한의 합). 0 이면 정보가 없다.
+  final int doctors;
+  final int specialists;
+
+  /// 개원한 해. 정보가 없으면 null.
+  final int? openedYear;
+
+  /// 홈페이지 주소. 없으면 빈 글.
+  final String homepage;
+
   /// 진료과목 이름 (예: 재활의학과).
   final Set<String> departments;
   final Set<InstitutionCategory> categories;
@@ -92,18 +110,23 @@ class Hospital {
   /// 지정 현황 등 화면에 그대로 보여줄 설명 (예: 장애인 건강주치의 (주장애관리)).
   final List<String> notes;
 
-  /// tools/build_data.py 가 만든 압축 형식(짧은 키)을 읽는다.
-  factory Hospital.fromJson(Map<String, dynamic> json) {
+  /// tools/build_data.py 가 만든 압축 형식(짧은 키)을 읽는다. [region] 은 읽은 시·도 파일의 코드.
+  factory Hospital.fromJson(Map<String, dynamic> json, {String region = ''}) {
     List<String> strings(String key) => [...?(json[key] as List?)?.cast<String>()];
     return Hospital(
       id: json['id'] as String,
       name: json['n'] as String,
+      region: region,
       kind: json['k'] as String? ?? '',
       address: json['a'] as String,
       phone: json['p'] as String? ?? '',
       district: json['d'] as String? ?? '',
       lat: (json['y'] as num).toDouble(),
       lng: (json['x'] as num).toDouble(),
+      doctors: json['dr'] as int? ?? 0,
+      specialists: json['sd'] as int? ?? 0,
+      openedYear: json['e'] as int?,
+      homepage: json['u'] as String? ?? '',
       departments: {
         for (final code in strings('dp')) ?departmentNames[code],
       },

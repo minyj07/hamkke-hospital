@@ -237,6 +237,35 @@ void main() {
     expect(h.facilities, isEmpty);
   });
 
+  test('Hospital.fromJson 은 의사 수·개원 연도·홈페이지와 시·도를 읽고, 없으면 비워 둔다', () {
+    final h = Hospital.fromJson({
+      'id': 'abc', 'n': '함께의원', 'a': '서울특별시 중구 세종대로 110', 'y': 37.5, 'x': 126.9,
+      'dr': 5, 'sd': 3, 'e': 2015, 'u': 'http://hamkke.example',
+    }, region: '110000');
+    expect((h.doctors, h.specialists, h.openedYear, h.homepage, h.region),
+        (5, 3, 2015, 'http://hamkke.example', '110000'));
+
+    final bare = Hospital.fromJson(
+        {'id': 'x', 'n': '빈의원', 'a': '주소', 'y': 37.5, 'x': 126.9});
+    expect((bare.doctors, bare.specialists, bare.openedYear, bare.homepage, bare.region),
+        (0, 0, null, '', ''));
+  });
+
+  test('limit 이 없으면 맞는 병원을 모두 점수순으로 주고, 지정 기관인지 알려준다', () {
+    final hospitals = [
+      for (var i = 0; i < 30; i++) hospital('의원$i', km: i.toDouble(), departments: {'재활의학과'}),
+      hospital('재활병원', km: 50, departments: {'재활의학과'},
+          categories: {InstitutionCategory.rehabHospital}),
+    ];
+    final p = profile({DisabilityType.physical}, CareNeed.rehab);
+    expect(recommend(p, hospitals), hasLength(20));
+    final all = recommend(p, hospitals, limit: null);
+    expect(all, hasLength(31));
+    expect(all.first.hospital.id, '재활병원');
+    expect(all.first.designated, isTrue);
+    expect(all.skip(1).any((r) => r.designated), isFalse);
+  });
+
   test('Hospital.fromJson 은 새 데이터에 앱이 모르는 종류가 있어도 건너뛰고 읽는다', () {
     final h = Hospital.fromJson({
       'id': 'abc',

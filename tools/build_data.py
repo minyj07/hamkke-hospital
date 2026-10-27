@@ -98,6 +98,27 @@ def to_float(value) -> float | None:
         return None
 
 
+def to_int(value) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def opening_year(estb) -> int | None:
+    """개설일자(예: 19790324)의 연도."""
+    year = to_int(str(estb or "")[:4])
+    return year if 1900 <= year <= datetime.now(KST).year else None
+
+
+def homepage(url) -> str:
+    """심평원에 등록된 홈페이지. 앞에 http(s):// 가 없으면 붙인다."""
+    url = str(url or "").strip()
+    if not url or " " in url or "." not in url:
+        return ""
+    return url if re.match(r"https?://", url, re.IGNORECASE) else "http://" + url
+
+
 def normalize_name(name: str) -> str:
     return re.sub(r"[\s()（）\[\]·.,\-]", "", name).lower()
 
@@ -132,6 +153,11 @@ class Builder:
                 "d": item.get("sgguCdNm", ""),
                 "y": round(lat, 5),
                 "x": round(lng, 5),
+                # 의사 수와 그중 전문의 수 (의과·치과·한의 합), 개원 연도, 홈페이지
+                "dr": to_int(item.get("drTotCnt")),
+                "sd": sum(to_int(item.get(k)) for k in ("mdeptSdrCnt", "detySdrCnt", "cmdcSdrCnt")),
+                "e": opening_year(item.get("estbDd")),
+                "u": homepage(item.get("hospUrl")),
                 "dp": set(),
                 "c": set(),
                 "f": set(),
@@ -403,7 +429,7 @@ def merge_facilities(builder: Builder) -> None:
 
 def file_hashes() -> dict[str, str]:
     """앱이 바뀐 파일만 내려받도록 파일마다 내용의 sha256 을 적는다. 키는 assets/data/ 아래 경로."""
-    paths = [OUT / "regions.json", *sorted((OUT / "hospitals").glob("*.json"))]
+    paths = [OUT / "regions.json", OUT / "search.json", *sorted((OUT / "hospitals").glob("*.json"))]
     return {p.relative_to(OUT).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
 
 
@@ -440,8 +466,9 @@ def write_outputs(builder: Builder, primary_care_file: str | None) -> None:
                 out["f"] = sorted(rec["f"])
             if rec["nt"]:
                 out["nt"] = rec["nt"]
-            if not out["p"]:
-                del out["p"]
+            for key in ("p", "dr", "sd", "e", "u"):
+                if not out[key]:
+                    del out[key]
             compact.append(out)
         (hospitals_dir / f"{code}.json").write_text(
             json.dumps(compact, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -460,6 +487,14 @@ def write_outputs(builder: Builder, primary_care_file: str | None) -> None:
     # sha256 이 운영체제마다 달라지지 않게 줄바꿈은 항상 \n 으로 쓴다.
     (OUT / "regions.json").write_text(
         json.dumps(regions, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    # 병원 이름 검색용 색인 (시·도 → [id, 이름, 시·군·구, 종별]). 전국을 검색해도 시·도 파일을 다 읽지
+    # 않고, 고른 병원의 시·도 파일만 읽는다.
+    search = {
+        code: [[r["id"], r["n"], r["d"], r["k"]] for r in sorted(by_region[code], key=lambda r: r["n"])]
+        for code in sorted(by_region)
+    }
+    (OUT / "search.json").write_text(
+        json.dumps(search, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     sources = ["건강보험심사평가원 병원정보서비스"]
     if primary_care_file:
         sources.append(f"국민건강보험공단 {primary_care_file}")

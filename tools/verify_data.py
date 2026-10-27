@@ -45,6 +45,10 @@ def check(meta: dict, previous: dict | None, min_ratio: float) -> list[str]:
 
     files: dict[str, str] = meta.get("files") or {}
     on_disk = {"regions.json", *(p.relative_to(OUT).as_posix() for p in (OUT / "hospitals").glob("*.json"))}
+    if (OUT / "search.json").exists():
+        on_disk.add("search.json")
+    else:
+        errors.append("병원 이름 검색 색인(search.json)이 없습니다.")
     for name in sorted(on_disk ^ files.keys()):
         errors.append(f"meta.json 의 파일 목록과 실제 파일이 다릅니다: {name}")
     for name, digest in files.items():
@@ -52,6 +56,7 @@ def check(meta: dict, previous: dict | None, min_ratio: float) -> list[str]:
         if path.exists() and hashlib.sha256(path.read_bytes()).hexdigest() != digest:
             errors.append(f"sha256 이 맞지 않습니다: {name}")
 
+    search = json.loads((OUT / "search.json").read_text(encoding="utf-8")) if "search.json" in on_disk else {}
     total = 0
     for region in json.loads((OUT / "regions.json").read_text(encoding="utf-8")):
         path = OUT / "hospitals" / f"{region['code']}.json"
@@ -64,6 +69,9 @@ def check(meta: dict, previous: dict | None, min_ratio: float) -> list[str]:
             errors.append(f"{region['name']}: 필수 항목이 빠진 병원 {broken}곳")
         if len(hospitals) != region["count"]:
             errors.append(f"{region['name']}: regions.json 은 {region['count']}곳, 파일은 {len(hospitals)}곳")
+        # 검색에서 고른 병원을 id 로 찾으므로 색인과 병원 파일의 id 가 같아야 한다.
+        if search and {e[0] for e in search.get(region["code"], [])} != {h["id"] for h in hospitals}:
+            errors.append(f"{region['name']}: 검색 색인과 병원 파일의 병원이 다릅니다.")
         total += len(hospitals)
     if total != meta.get("hospitalCount"):
         errors.append(f"hospitalCount({meta.get('hospitalCount')})와 실제 병원 수({total})가 다릅니다.")

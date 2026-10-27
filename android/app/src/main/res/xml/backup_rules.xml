@@ -2,9 +2,11 @@
 <!--
     안드로이드 11 이하의 자동 백업에서 뺄 파일. 12 이상은 data_extraction_rules.xml 을 쓴다.
     - last_search.json: 저장한 검색 조건 (장애 정보가 들어 있다, lib/data/last_search_store.dart)
+    - favorites.json: 즐겨찾기한 병원 (다니는 병원은 건강 정보다, lib/data/favorites.dart)
     - hospital_data/: 내려받은 병원 데이터 (다시 받으면 된다, lib/data/data_store.dart)
 -->
 <full-backup-content>
     <exclude domain="file" path="last_search.json" />
+    <exclude domain="file" path="favorites.json" />
     <exclude domain="file" path="hospital_data/" />
 </full-backup-content>

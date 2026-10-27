@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'data/data_store.dart';
+import 'data/favorites.dart';
 import 'data/hospital_repository.dart';
 import 'data/last_search_store.dart';
 import 'screens/profile_screen.dart';
@@ -21,10 +22,13 @@ void main() {
   final repository = LocalHospitalRepository(DataStore(
     baseUrl: dataBaseUrl.isEmpty ? null : Uri.parse(dataBaseUrl),
   ));
+  final favorites = Favorites(FileFavoritesStore());
+  unawaited(favorites.load());
   runApp(HamkkeApp(
     repository: repository,
     locationService: DeviceLocationService(),
     searchStore: FileLastSearchStore(),
+    favorites: favorites,
   ));
   _keepUpdated(repository);
 }
@@ -46,11 +50,13 @@ class HamkkeApp extends StatelessWidget {
     required this.repository,
     required this.locationService,
     required this.searchStore,
+    required this.favorites,
   });
 
   final HospitalRepository repository;
   final LocationService locationService;
   final LastSearchStore searchStore;
+  final Favorites favorites;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +84,7 @@ class HamkkeApp extends StatelessWidget {
         repository: repository,
         locationService: locationService,
         searchStore: searchStore,
+        favorites: favorites,
       ),
     );
   }

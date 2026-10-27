@@ -228,6 +228,24 @@ void main() {
     expect((await repository.loadHospitals('110000')).single.name, '예전서울병원');
   });
 
+  test('저장소는 병원에 시·도를 붙이고, 검색 색인으로 찾은 병원을 id 로 연다', () async {
+    final app = {
+      ...bundled,
+      'search.json': jsonEncode({
+        '110000': [
+          ['예전서울병원', '예전서울병원', '중구', '의원'],
+        ],
+      }),
+    };
+    final repository = LocalHospitalRepository(DataStore(bundle: FakeBundle(app)));
+
+    final index = await repository.loadSearchIndex();
+    expect((index.single.region, index.single.name), ('110000', '예전서울병원'));
+    final found = await repository.findHospital(index.single.region, index.single.id);
+    expect((found?.name, found?.region), ('예전서울병원', '110000'));
+    expect(await repository.findHospital('110000', '문닫은병원'), isNull);
+  });
+
   test('저장소는 새 데이터를 받으면 다시 읽는다', () async {
     final repository = LocalHospitalRepository(store());
     expect((await repository.loadHospitals('110000')).single.name, '예전서울병원');

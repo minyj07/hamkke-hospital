@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 
 import '../models/hospital.dart';
+import '../services/hospital_search.dart';
 import 'data_store.dart';
 import 'regions.dart';
 
@@ -13,6 +14,12 @@ abstract class HospitalRepository {
   Future<List<Region>> loadRegions();
   Future<List<Hospital>> loadHospitals(String regionCode);
   Future<DataInfo> loadInfo();
+
+  /// 병원 이름 검색 색인 (전국).
+  Future<List<SearchEntry>> loadSearchIndex();
+
+  /// [region] 시·도의 [id] 병원. 데이터에서 없어졌으면(문을 닫는 등) null.
+  Future<Hospital?> findHospital(String region, String id);
 
   /// 새 데이터가 있으면 받는다. 받으면 다음에 불러올 때부터 새 데이터를 쓴다.
   Future<UpdateResult> update();
@@ -39,10 +46,18 @@ class LocalHospitalRepository implements HospitalRepository {
   Future<List<Hospital>> loadHospitals(String regionCode) => _load(
       'hospitals/$regionCode.json',
       // 서울은 1만 곳이 넘으므로 화면이 멈추지 않게 별도 isolate 에서 해석한다.
-      (raw) => compute(_parseHospitals, raw));
+      (raw) => compute(_parseHospitals, (raw, regionCode)));
 
   @override
   Future<DataInfo> loadInfo() => _store.info;
+
+  @override
+  Future<List<SearchEntry>> loadSearchIndex() =>
+      _load('search.json', (raw) => compute(parseSearchIndex, raw));
+
+  @override
+  Future<Hospital?> findHospital(String region, String id) async =>
+      (await loadHospitals(region)).where((h) => h.id == id).firstOrNull;
 
   @override
   Future<UpdateResult> update() async {
@@ -66,7 +81,10 @@ class LocalHospitalRepository implements HospitalRepository {
   }
 }
 
-List<Hospital> _parseHospitals(String raw) => [
-      for (final h in jsonDecode(raw) as List)
-        Hospital.fromJson(h as Map<String, dynamic>),
-    ];
+List<Hospital> _parseHospitals((String, String) file) {
+  final (raw, region) = file;
+  return [
+    for (final h in jsonDecode(raw) as List)
+      Hospital.fromJson(h as Map<String, dynamic>, region: region),
+  ];
+}

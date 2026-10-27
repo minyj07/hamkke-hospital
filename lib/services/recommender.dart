@@ -40,6 +40,7 @@ class Recommendation {
     required this.distanceKm,
     required this.reasons,
     required this.missing,
+    this.designated = false,
   });
 
   final Hospital hospital;
@@ -51,6 +52,9 @@ class Recommendation {
 
   /// 필요한데 이 병원에 없는 편의시설.
   final List<Facility> missing;
+
+  /// 찾는 진료에 맞는 정부 지정 기관인지 (예: 재활 치료의 재활의료기관).
+  final bool designated;
 }
 
 const _departmentsByType = <DisabilityType, Set<String>>{
@@ -188,10 +192,11 @@ CareRequirement buildRequirement(UserProfile p) {
   );
 }
 
+/// 점수가 높은 순으로 [limit] 곳. [limit] 이 null 이면 맞는 병원을 모두 돌려준다.
 List<Recommendation> recommend(
   UserProfile profile,
   List<Hospital> hospitals, {
-  int limit = 20,
+  int? limit = 20,
 }) {
   final req = buildRequirement(profile);
   final Area(:lat, :lng) = profile.origin;
@@ -243,11 +248,12 @@ List<Recommendation> recommend(
       distanceKm: km,
       reasons: reasons,
       missing: missing,
+      designated: matchedCategories.isNotEmpty,
     ));
   }
 
   results.sort((a, b) => b.score.compareTo(a.score));
-  return results.take(limit).toList();
+  return limit == null ? results : results.take(limit).toList();
 }
 
 /// '외과'를 찾을 때 이 이름들 속의 '외과'는 빼고 본다.

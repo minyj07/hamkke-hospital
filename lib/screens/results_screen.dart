@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/favorites.dart';
 import '../data/hospital_repository.dart';
 import '../data/regions.dart';
 import '../models/hospital.dart';
@@ -8,14 +9,25 @@ import '../services/recommender.dart';
 import 'hospital_detail_screen.dart';
 import 'retry_message.dart';
 
+/// 결과를 늘어놓는 순서.
+enum ResultOrder {
+  recommended('추천순'),
+  nearest('가까운 순');
+
+  const ResultOrder(this.label);
+  final String label;
+}
+
 class ResultsScreen extends StatefulWidget {
   const ResultsScreen({
     super.key,
     required this.repository,
+    required this.favorites,
     required this.profile,
   });
 
   final HospitalRepository repository;
+  final Favorites favorites;
   final UserProfile profile;
 
   @override
@@ -23,8 +35,14 @@ class ResultsScreen extends StatefulWidget {
 }
 
 class _ResultsScreenState extends State<ResultsScreen> {
-  late Future<(List<Recommendation>, DataInfo)> _result = _load();
+  /// 한 번에 보여줄 병원 수.
+  static const _shown = 20;
 
+  late Future<(List<Recommendation>, DataInfo)> _result = _load();
+  ResultOrder _order = ResultOrder.recommended;
+  bool _designatedOnly = false;
+
+  /// 조건에 맞는 병원 전부 (점수순). 정렬·거르기를 바꿔도 다시 계산하지 않는다.
   Future<(List<Recommendation>, DataInfo)> _load() async {
     final p = widget.profile;
     final (lists, info) = await (
@@ -34,7 +52,16 @@ class _ResultsScreenState extends State<ResultsScreen> {
       ]),
       widget.repository.loadInfo(),
     ).wait;
-    return (recommend(p, [for (final l in lists) ...l]), info);
+    return (recommend(p, [for (final l in lists) ...l], limit: null), info);
+  }
+
+  /// 고른 순서·조건으로 거른 뒤 앞의 [_shown] 곳. '가까운 순'은 맞는 병원 전체에서 가까운 곳을 고른다.
+  List<Recommendation> _pick(List<Recommendation> all) {
+    final picked = [for (final r in all) if (!_designatedOnly || r.designated) r];
+    if (_order == ResultOrder.nearest) {
+      picked.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+    }
+    return picked.take(_shown).toList();
   }
 
   @override
@@ -56,7 +83,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          final (results, info) = snapshot.data!;
+          final (all, info) = snapshot.data!;
+          final results = _pick(all);
           // 편의시설 정보가 없는 병원은 카드마다 반복하지 않고 요약에서 한 번만 안내한다.
           final unknownFacilities = {
             for (final r in results)
@@ -68,11 +96,21 @@ class _ResultsScreenState extends State<ResultsScreen> {
               _SummaryCard(
                 profile: widget.profile,
                 count: results.length,
+                order: _order,
+                designatedOnly: _designatedOnly,
                 unknownFacilities: unknownFacilities,
                 unmatchedTexts: buildRequirement(widget.profile).unmatchedTexts,
               ),
+              // 맞는 병원이 하나도 없으면 순서·거르기를 바꿔도 소용없다.
+              if (all.isNotEmpty)
+                _OrderBar(
+                  order: _order,
+                  designatedOnly: _designatedOnly,
+                  onOrder: (order) => setState(() => _order = order),
+                  onDesignatedOnly: (on) => setState(() => _designatedOnly = on),
+                ),
               const SizedBox(height: 8),
-              for (final r in results) _ResultTile(rec: r),
+              for (final r in results) _ResultTile(rec: r, favorites: widget.favorites),
               _Disclaimer(info: info),
             ],
           );
@@ -86,12 +124,16 @@ class _SummaryCard extends StatelessWidget {
   const _SummaryCard({
     required this.profile,
     required this.count,
+    required this.order,
+    required this.designatedOnly,
     required this.unknownFacilities,
     required this.unmatchedTexts,
   });
 
   final UserProfile profile;
   final int count;
+  final ResultOrder order;
+  final bool designatedOnly;
   final Set<Facility> unknownFacilities;
   final List<String> unmatchedTexts;
 
@@ -107,11 +149,15 @@ class _SummaryCard extends StatelessWidget {
           '${profile.typesLabel} · ${profile.needLabel} · $place',
           if (count == 0) ...[
             '조건에 맞는 병원을 찾지 못했어요.',
-            '다른 지역이나 진료를 골라 보세요.',
+            designatedOnly ? '‘지정 기관만’을 끄면 더 찾을 수 있어요.' : '다른 지역이나 진료를 골라 보세요.',
           ] else ...[
-            // 순서는 거리만이 아니라 recommend() 의 점수를 따른다.
-            '조건에 잘 맞는 순서로 $count곳을 골랐어요.',
-            '지정 기관인지, 필요한 진료과·편의시설이 있는지, 얼마나 가까운지를 함께 봤어요.',
+            if (order == ResultOrder.recommended) ...[
+              // 순서는 거리만이 아니라 recommend() 의 점수를 따른다.
+              '조건에 잘 맞는 순서로 $count곳을 골랐어요.',
+              '지정 기관인지, 필요한 진료과·편의시설이 있는지, 얼마나 가까운지를 함께 봤어요.',
+            ] else
+              '조건에 맞는 병원 중 가까운 $count곳이에요.',
+            if (designatedOnly) '정부 지정 기관만 보여줘요.',
             '거리는 $from에서 잰 직선거리예요.',
           ],
           for (final text in unmatchedTexts)
@@ -124,10 +170,50 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
+/// 정렬(추천순·가까운 순)과 지정 기관만 보기.
+class _OrderBar extends StatelessWidget {
+  const _OrderBar({
+    required this.order,
+    required this.designatedOnly,
+    required this.onOrder,
+    required this.onDesignatedOnly,
+  });
+
+  final ResultOrder order;
+  final bool designatedOnly;
+  final ValueChanged<ResultOrder> onOrder;
+  final ValueChanged<bool> onDesignatedOnly;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final o in ResultOrder.values)
+            ChoiceChip(
+              label: Text(o.label),
+              selected: order == o,
+              onSelected: (_) => onOrder(o),
+            ),
+          FilterChip(
+            label: const Text('지정 기관만'),
+            selected: designatedOnly,
+            onSelected: onDesignatedOnly,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ResultTile extends StatelessWidget {
-  const _ResultTile({required this.rec});
+  const _ResultTile({required this.rec, required this.favorites});
 
   final Recommendation rec;
+  final Favorites favorites;
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +224,11 @@ class _ResultTile extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => HospitalDetailScreen(rec: rec),
+          builder: (_) => HospitalDetailScreen(
+            hospital: h,
+            recommendation: rec,
+            favorites: favorites,
+          ),
         )),
         child: Padding(
           padding: const EdgeInsets.all(16),
