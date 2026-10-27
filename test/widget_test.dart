@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hamkke_hospital/data/data_store.dart';
+import 'package:hamkke_hospital/data/saved_hospitals.dart';
 import 'package:hamkke_hospital/models/care_card.dart';
 import 'package:hamkke_hospital/models/disability.dart';
 import 'package:hamkke_hospital/models/hospital.dart';
@@ -466,9 +467,9 @@ void main() {
     expect(find.text('즐겨찾기에서 빼기'), findsOneWidget);
     expect(favorites.saved.single.name, '강남재활의학과의원');
 
-    await tester.pageBack();
+    await goBack(tester);
     await tester.pumpAndSettle();
-    await tester.pageBack();
+    await goBack(tester);
     await tester.pumpAndSettle();
     await tapTab(tester, '즐겨찾기');
     // 즐겨찾기 카드와 최근 본 병원에 하나씩 있다.
@@ -482,7 +483,7 @@ void main() {
     await tester.tap(find.text('강남재활의학과의원').first);
     await tester.pumpAndSettle();
     expect(find.text('서울특별시 강남구 테헤란로 1'), findsOneWidget);
-    await tester.pageBack();
+    await goBack(tester);
     await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('강남재활의학과의원 즐겨찾기에서 빼기'));
@@ -571,5 +572,29 @@ void main() {
     await tapAndSettle(tester, '지금 새 정보 확인하기');
     expect(find.textContaining('인터넷 연결을 확인'), findsOneWidget);
     expect(find.text('2026-10-07 기준 공공데이터'), findsOneWidget);
+  });
+
+  testWidgets('앱을 다시 켜면 저장해 둔 즐겨찾기·최근 본 병원을 바꾸기 전에도 바로 보여 준다', (tester) async {
+    final favorites = FakeSavedHospitalsStore()..saved = [SavedHospital.of(defaultHospitals.first)];
+    final recent = FakeSavedHospitalsStore()..saved = [SavedHospital.of(defaultHospitals.last)];
+    await pumpApp(tester, await makeServices(favoritesStore: favorites, recentStore: recent));
+
+    await tapTab(tester, '즐겨찾기');
+    expect(find.text('강남재활의학과의원'), findsOneWidget);
+    expect(find.text('강남피부과의원'), findsOneWidget);
+    expect(find.textContaining('즐겨찾기한 병원이 없어요'), findsNothing);
+
+    // 병원 정보에서도 이미 즐겨찾기한 병원으로 보인다.
+    await tester.tap(find.text('강남재활의학과의원'));
+    await tester.pumpAndSettle();
+    expect(find.text('즐겨찾기에서 빼기'), findsOneWidget);
+  });
+
+  testWidgets('앱 바의 뒤로 가기 버튼은 휴대폰 언어와 상관없이 한국어로 읽힌다', (tester) async {
+    await pumpApp(tester, await makeServices(searchStore: FakeSearchStore(gangnamRehab)));
+    await searchAgain(tester);
+
+    expect(find.byTooltip('뒤로'), findsOneWidget);
+    expect(find.byTooltip('Back'), findsNothing);
   });
 }

@@ -61,6 +61,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        // 글자를 크게 키운 작은 화면에서는 본문이 다 들어가지 않으므로 굴려서 볼 수 있게 한다.
+        scrollable: true,
         title: const Text('내 정보를 모두 지울까요?'),
         content: const Text('진료 카드, 지난번 검색 조건, 즐겨찾기, 최근 본 병원을 지워요. '
             '지우면 되돌릴 수 없어요. 글자 크기 같은 화면 설정은 남아요.'),

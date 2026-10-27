@@ -9,38 +9,7 @@ import 'package:hamkke_hospital/models/user_profile.dart';
 import 'package:hamkke_hospital/services/recommender.dart';
 import 'package:hamkke_hospital/services/score_weights.dart';
 
-const seoul = Region(code: '110000', name: '서울특별시', lat: 37.5665, lng: 126.978);
-
-/// 서울 중심에서 동쪽으로 약 [km] 떨어진 병원.
-Hospital hospital(
-  String id, {
-  double km = 0,
-  Set<String> departments = const {},
-  Set<InstitutionCategory> categories = const {},
-  Set<Facility> facilities = const {},
-  Set<Facility> absent = const {},
-}) =>
-    Hospital(
-      id: id,
-      name: id,
-      address: '',
-      lat: seoul.lat,
-      lng: seoul.lng + km / 88.2,
-      departments: departments,
-      categories: categories,
-      facilities: facilities,
-      absentFacilities: absent,
-    );
-
-UserProfile profile(
-  Set<DisabilityType> types,
-  CareNeed need, {
-  Severity severity = Severity.severe,
-}) =>
-    UserProfile(types: types, severity: severity, need: need, region: seoul);
-
-List<String> ids(List<Recommendation> results) =>
-    [for (final r in results) r.hospital.id];
+import 'recommender_helpers.dart';
 
 void main() {
   group('buildRequirement', () {

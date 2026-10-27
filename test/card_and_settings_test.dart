@@ -48,7 +48,7 @@ void main() {
       expect(find.text('제 차례가 되면 직접 와서 알려 주세요.'), findsOneWidget);
       expect(find.text('큰 소리에 놀라요.'), findsOneWidget);
       expect(screenOn, [true]);
-      await tester.pageBack();
+      await goBack(tester);
       await tester.pumpAndSettle();
       expect(screenOn, [true, false]);
     });
@@ -92,7 +92,7 @@ void main() {
       await tester.enterText(find.widgetWithText(TextField, '이름 또는 불러 주었으면 하는 이름'), '다른이름');
       await tester.pump();
 
-      await tester.pageBack();
+      await goBack(tester);
       await tester.pumpAndSettle();
       expect(find.text('저장하지 않고 나갈까요?'), findsOneWidget);
       await tester.tap(find.text('나가기'));
@@ -151,7 +151,7 @@ void main() {
       expect(searchStore.saved, isNull);
       expect(favorites.saved, isEmpty);
       expect(recent.saved, isEmpty);
-      await tester.pageBack();
+      await goBack(tester);
       await tester.pumpAndSettle();
       expect(find.text('지난번 조건'), findsNothing);
       await tapTab(tester, '병원 찾기');

@@ -319,6 +319,13 @@ Future<void> tapAndSettle(WidgetTester tester, String text) async {
   await tester.pumpAndSettle();
 }
 
+/// 앱 바의 뒤로 가기를 누른다. 앱이 한국어라 툴팁이 '뒤로'이므로,
+/// 영어 'Back' 툴팁을 찾는 tester.pageBack() 은 쓸 수 없다.
+Future<void> goBack(WidgetTester tester) async {
+  await tester.tap(find.byTooltip('뒤로'));
+  await tester.pumpAndSettle();
+}
+
 Future<void> tapNext(WidgetTester tester) async {
   await tester.tap(find.widgetWithText(FilledButton, '다음'));
   await tester.pumpAndSettle();

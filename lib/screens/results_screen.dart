@@ -299,7 +299,13 @@ class _Controls extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.labelLarge),
+              // 목록 항목 안의 느슨한 글은 항목 노드 하나로 합쳐져서, 화면낭독기가 '순서 거르기 거리'를
+              // 먼저 읽고 칩들을 뒤에 읽는다. 제목마다 노드를 따로 두어 제목 → 그 칩들 순서로 읽게 한다.
+              Semantics(
+                container: true,
+                header: true,
+                child: Text(title, style: Theme.of(context).textTheme.labelLarge),
+              ),
               const SizedBox(height: 4),
               Wrap(spacing: 8, runSpacing: 8, children: chips),
             ],

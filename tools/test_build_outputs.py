@@ -13,7 +13,7 @@ from unittest import mock
 
 import build_data
 import verify_data
-from build_data import Builder, homepage, opening_year
+from build_data import Builder, homepage, opening_year, primary_care_source
 
 
 def add(builder: Builder, ykiho: str, name: str, sido: str, address: str, **extra) -> dict:
@@ -37,6 +37,12 @@ class FieldTest(unittest.TestCase):
         self.assertEqual(homepage(" HTTP://B.KR "), "HTTP://B.KR")
         self.assertEqual(homepage("없음"), "")
         self.assertEqual(homepage(None), "")
+
+    def test_건강주치의_출처는_파일_이름에_기관_이름이_있으면_다시_붙이지_않는다(self):
+        self.assertEqual(primary_care_source("국민건강보험공단_장애인 건강주치의 의료기관 목록_20250721"),
+                         "국민건강보험공단_장애인 건강주치의 의료기관 목록_20250721")
+        self.assertEqual(primary_care_source("장애인 건강주치의 의료기관 목록_20250721"),
+                         "국민건강보험공단 장애인 건강주치의 의료기관 목록_20250721")
 
 
 class OutputTest(unittest.TestCase):

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -104,7 +105,8 @@ class HamkkeApp extends StatelessWidget {
           brightness: brightness,
           contrastLevel: highContrast ? 1.0 : 0.5,
         ),
-        visualDensity: VisualDensity.comfortable,
+        // 기본 밀도를 쓴다. comfortable 은 이름과 달리 더 촘촘해서(-4dp) 버튼·칩의 터치 영역이 44dp 로 줄어든다.
+        visualDensity: VisualDensity.standard,
         materialTapTargetSize: MaterialTapTargetSize.padded,
       );
 
@@ -118,6 +120,11 @@ class HamkkeApp extends StatelessWidget {
         builder: (context, _) => MaterialApp(
           title: '함께병원',
           debugShowCheckedModeBanner: false,
+          // 앱은 한국어만 쓴다. 뒤로 가기 버튼의 '뒤로'처럼 Material 이 넣는 라벨도
+          // 휴대폰 언어와 상관없이 한국어로 보이고 읽힌다.
+          locale: const Locale('ko'),
+          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
           theme: _theme(Brightness.light, highContrast: settings.highContrast),
           darkTheme: _theme(Brightness.dark, highContrast: settings.highContrast),
           // 휴대폰에서 대비 높이기를 켜도 고대비로 보여 준다.

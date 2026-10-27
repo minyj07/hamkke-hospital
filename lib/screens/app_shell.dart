@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/search_conditions.dart';
+import 'app_scope.dart';
 import 'care_card_screen.dart';
 import 'favorites_screen.dart';
 import 'find_screen.dart';
@@ -33,6 +36,16 @@ class AppShell extends StatefulWidget {
 class AppShellState extends State<AppShell> {
   AppTab _tab = AppTab.home;
   final _find = GlobalKey<FindScreenState>();
+
+  @override
+  void initState() {
+    super.initState();
+    // 즐겨찾기·최근 본 병원은 탭과 병원 정보 화면이 함께 쓰므로 탭이 생길 때 한 번 읽어 둔다.
+    // 안 읽으면 다음에 켰을 때 목록을 바꾸기 전까지 비어 보인다.
+    final services = AppScope.of(context);
+    unawaited(services.favorites.load());
+    unawaited(services.recent.load());
+  }
 
   void showTab(AppTab tab) => setState(() => _tab = tab);
 

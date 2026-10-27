@@ -462,6 +462,13 @@ def center(recs: list[dict]) -> dict:
     }
 
 
+def primary_care_source(file_name: str) -> str:
+    """출처 표시용 건강주치의 파일 이름. 파일 이름이 이미 기관 이름으로 시작하면 다시 붙이지 않는다."""
+    agency = "국민건강보험공단"
+    name = file_name.strip()
+    return name if name.startswith(agency) else f"{agency} {name}"
+
+
 def write_outputs(builder: Builder, primary_care_file: str | None) -> None:
     names = builder.region_names()
     by_region: dict[str, list[dict]] = defaultdict(list)
@@ -524,7 +531,7 @@ def write_outputs(builder: Builder, primary_care_file: str | None) -> None:
             json.dumps(scoring, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
     sources =["건강보험심사평가원 병원정보서비스"]
     if primary_care_file:
-        sources.append(f"국민건강보험공단 {primary_care_file}")
+        sources.append(primary_care_source(primary_care_file))
     sources.append("보건복지부·국립재활원 지정 기관 목록")
     if any(rec["f"] or rec["fx"] for recs in by_region.values() for rec in recs):
         sources.append("한국사회보장정보원 장애인편의시설 현황")

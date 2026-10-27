@@ -4,14 +4,14 @@
 
 ## 1. 지금 상태 한눈에
 
-- **하던 일**: 기획서(`C:\Users\minyj\OneDrive\문서\카카오톡 받은 파일\기획서.md`, v1.0, 2026-10-24)대로 앱을 MVP 수준으로 고치는 중.
-- **코드**: 기획서 P0 과 P1 대부분을 구현했다. `flutter analyze` 문제 없음, Flutter 테스트 104개와 Python 테스트 19개가 통과한다.
-- **아직 안 한 것**: 에뮬레이터·실기기 확인, 추천 시나리오 테스트 30개, 접근성 자동 점검 테스트, 푸시. 자세한 순서는 [3장](#3-바로-이어서-할-일-순서대로)에 있다. README 는 새 기능에 맞게 고쳐 두었다.
+- **하던 일**: 기획서(`C:\Users\minyj\OneDrive\문서\카카오톡 받은 파일\기획서.md`, v1.0, 2026-10-24)대로 앱을 MVP 수준으로 고치는 중. 2026-10-27 두 번째 세션에서 3장의 1~4번(APK 크기, 에뮬레이터 점검, 추천 시나리오 테스트, 접근성 자동 점검)을 끝내고 그 과정에서 찾은 결함 6개를 고쳤다 ([3-1장](#3-1-2026-10-27-두-번째-세션에서-고친-것)).
+- **코드**: 기획서 P0 과 P1 대부분을 구현했다. `flutter analyze` 문제 없음, Flutter 테스트 **162개**와 Python 테스트 **20개**가 통과한다.
+- **아직 안 한 것**: 푸시, 데이터 배포, 네이버 지도 키·지도 화면 확인, 실기기(지문·TalkBack 실제 청취) 확인, 그리고 사용자가 정할 것 3가지([2-1장](#2-1-사용자와-상의할-것)). 자세한 순서는 [3장](#3-바로-이어서-할-일-순서대로)에 있다. README 는 새 기능과 ABI 별 빌드에 맞게 고쳐 두었다.
 - **Git**:
-  - 저장소는 `github.com/minyj07/hamkke-hospital` 의 `main` 이다. `1d58a50` 이 1단계(이름 검색·즐겨찾기 등)다.
-  - **이번 작업은 로컬 `main` 에 커밋했고, 푸시는 하지 않았다** (사용자 요청). `git log` 맨 위 커밋이다.
+  - 저장소는 `github.com/minyj07/hamkke-hospital` 의 `main` 이다. `1d58a50` 이 1단계(이름 검색·즐겨찾기 등), `03dfb48` 이 2단계(기획서 MVP)다.
+  - **두 세션의 작업 모두 로컬 `main` 에 커밋했고, 푸시는 하지 않았다** (사용자 요청). 이번 세션 것은 `git log` 맨 위 커밋이다.
   - 그래서 `origin/main` 은 아직 `1d58a50` 이고 CI 도 돌지 않았다. 푸시는 사용자에게 먼저 물어본다.
-  - 커밋 메시지 끝에는 `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` 을 붙인다.
+  - 커밋 메시지 끝에는 작업한 모델의 `Co-Authored-By: <모델 이름> <noreply@anthropic.com>` 을 붙인다 (1·2단계는 Claude Opus 5.5, 이번 세션은 Claude Fable 5.1).
 
 ## 2. 사용자가 정한 것
 
@@ -23,30 +23,44 @@
 | 잠겨 있을 때 진료 카드 공개 (미결 4) | 기본은 **안 보이게**. 설정에서 '잠겨 있어도 병원에 보여 주기 열기'를 켤 수 있다. | `lib/data/app_settings.dart` |
 | 상태 관리 | Riverpod 를 쓰지 않고 기존 방식(ChangeNotifier + `AppScope` InheritedWidget)을 유지한다. | `lib/screens/app_scope.dart` |
 | 익명 사용 통계 (미결 5) | 넣지 않았다. 아직 정하지 않음. | — |
+| 앱 언어 | 한국어만. Material 기본 라벨(뒤로 가기 '뒤로', 라이선스 화면 등)도 휴대폰 언어와 상관없이 한국어다. | `lib/main.dart` 의 `locale`, `localizationsDelegates` |
+
+## 2-1. 사용자와 상의할 것
+
+아직 정하지 않았고, 정하면 코드를 바꿔야 하는 것. 테스트는 지금 동작대로 적어 두었다.
+
+1. **지도 SDK 유지 여부**: 네이버 지도 SDK 가 ABI 하나당 약 25MB 다. arm64 APK 는 47.5MB 로 50MB 안에 들지만, 빼면 약 22MB 가 된다. 키를 받아 지도 화면을 쓸지, 지도 앱으로 넘기는 '지도에서 보기'만 둘지 정한다.
+2. **국립 정신건강 전문기관의 거리 감점**: `InstitutionCategory.mentalHealthCenter` 가 `recommender.dart` 의 `_regionalCategories` 에 없어 동네 병원처럼 1km 에 2점씩 깎인다. 전국에 몇 곳 없는 기관이라 40km 떨어지면 동네 정신건강의학과 의원보다 뒤로 간다 (시나리오 '지적장애(심함) 마음 건강'). 권역 기관(0.2/km, 최대 30)으로 바꿀지 정한다.
+3. **건강검진에서 찾는 진료과**: `CareNeed.checkup` 은 가정의학과만 찾아서, 내과만 있는 병원은 장애친화 검진기관이 아니면 결과에서 빠진다 (시나리오 '심장장애 건강검진'). 실제로 내과 의원이 국가검진을 많이 하므로 내과를 더할지 정한다.
+4. **글자 200%·좁은 화면(360dp)에서 실제 글꼴로 잘릴 수 있는 문구 3곳** (접근성 테스트의 계산, 문구를 바꿔야 해서 그대로 둠): 카드 편집의 칩 '조용한 곳에서 기다리기', 결과 거르기 칩 '편의시설 정보 있는 곳만'(경계선), 카드 편집의 입력 칸 라벨 '이름 또는 불러 주었으면 하는 이름'(줄임표). 짧은 문구로 바꿀지 정한다.
 
 ## 3. 바로 이어서 할 일 (순서대로)
 
-1. **APK 크기 정리**: 릴리스 빌드는 되지만 하나로 묶은 APK 가 124MB 다 ([7장](#7-빌드-확인-기록)). 휴대폰 시험용은 `--split-per-abi` 의 arm64 APK 를 쓰고, 지도 SDK 크기를 사용자와 상의한다.
-2. **에뮬레이터로 전체 화면 점검** (AVD `Medium_Phone_API_37.0`). 이번에 새로 들어가 아직 기기에서 돌려 보지 않은 것:
-   - 앱 잠금 (`local_auth`): MainActivity 를 `FlutterFragmentActivity` 로 바꿨고 테마는 AppCompat 이다. PIN 은 `adb shell locksettings set-pin 1234`, 지문은 `adb -e emu finger touch 1` 로 시험한다.
-   - 진료 카드 보안 저장 (`flutter_secure_storage` 11.2.0).
-   - 화면 켜 두기 (`wakelock_plus`).
-   - 메일 앱 열기 (신고·문의).
-   - 첫 실행 안내 → 홈 → 하단 탭 4개 → 병원 찾기 6단계 → 결과 → 상세 → 진료 카드 → 설정.
-   - TalkBack 으로 결과 카드가 '이름, 거리, 추천 이유, 경고' 순으로 읽히는지 본다.
-   - 휴대폰 글꼴을 200%로 놓고 잘림이 없는지 본다.
-3. **추천 시나리오 테스트 30개** (기획서 7.2, 12.3 완료 기준). `test/recommender_scenarios_test.dart` 를 새로 만든다.
-   - 장애 유형 × 진료 목적 × 나이 대표 조합마다 기대 1순위·포함·제외를 표로 적는다.
-   - `test/recommender_test.dart` 의 `hospital()`·`profile()` 도우미를 쓰면 된다.
-4. **접근성 자동 점검 테스트**:
-   - 설정의 `textScale: 2.0` 과 화면 크기 360×640 으로 주요 화면을 모두 열어, 넘침(RenderFlex overflow)이 없는지 본다.
-   - `androidTapTargetGuideline`, `labeledTapTargetGuideline`, `textContrastGuideline` 을 통과하는지 본다.
-5. (README 는 갱신함: 새 기능, `--dart-define` 3개, 새 파일 구조, 백업 제외 목록.)
-6. **푸시** (사용자 승인 후). 커밋은 해 두었다. 푸시한 뒤 GitHub CI(`ci.yml`)를 확인한다.
-7. **데이터 배포**:
-   - Actions → 병원 데이터 갱신 → Run workflow 를 돌려 `data` 브랜치에 `scoring.json` 을 올린다. `build=false` 여도 된다.
+1~4번(APK 크기, 에뮬레이터 점검, 추천 시나리오 테스트, 접근성 자동 점검)은 2026-10-27 두 번째 세션에서 끝냈다 ([7장](#7-빌드-확인-기록), [7-1장](#7-1-에뮬레이터-점검-기록-2026-10-27), [3-1장](#3-1-2026-10-27-두-번째-세션에서-고친-것)). 남은 것:
+
+1. **사용자 결정** ([2-1장](#2-1-사용자와-상의할-것)) 을 받으면 그에 맞게 `recommender.dart`·`data/scoring.json`·시나리오 테스트의 기대값을 함께 고친다.
+2. **푸시** (사용자 승인 후). 커밋은 해 두었다. 푸시한 뒤 GitHub CI(`ci.yml`)를 확인한다. `flutter_localizations` 가 새로 들어갔지만 Flutter SDK 에 든 패키지라 CI 의 `flutter pub get` 으로 충분하다.
+3. **데이터 배포**:
+   - Actions → 병원 데이터 갱신 → Run workflow 를 돌려 `data` 브랜치에 `scoring.json` 과 고친 `meta.json`(출처 문구) 을 올린다. `build=false` 여도 된다.
    - 지금 `data` 브랜치에는 `scoring.json` 이 없다. 그래도 앱은 앱에 든 점수표를 쓰므로 문제없다.
-8. **네이버 지도 키**를 받으면 지도 화면을 실기기에서 처음 확인한다. `results_map.dart` 는 아직 한 번도 실행해 보지 않았다.
+4. **네이버 지도 키**를 받으면 지도 화면을 실기기에서 처음 확인한다. `results_map.dart` 는 아직 한 번도 실행해 보지 않았다.
+5. **실기기 확인**: `app-arm64-v8a-release.apk` 를 설치해서 지문 잠금, TalkBack 실제 청취(특히 병원 정보의 '추천 이유·지정 현황' 묶음이 한 덩어리로 읽히는 것이 괜찮은지), 메일 앱을 본다.
+6. (기획서 12.3) 장애 당사자 사용성 테스트는 사용자 몫이다.
+
+## 3-1. 2026-10-27 두 번째 세션에서 고친 것
+
+점검·테스트를 하다가 찾은 결함. 문구와 동작은 바꾸지 않았다.
+
+| 결함 | 고친 곳 | 검사하는 테스트 |
+|---|---|---|
+| 즐겨찾기·최근 본 병원을 앱을 켤 때 읽지 않아, 다음에 켰을 때 목록을 바꾸기 전까지 즐겨찾기 탭이 비어 보이고 병원 정보의 버튼도 '넣기'로 보였다 (`SavedHospitals._ready` 가 지연 초기화) | `app_shell.dart` 의 `initState` 에서 `favorites.load()`·`recent.load()` | `widget_test.dart` '앱을 다시 켜면 저장해 둔 즐겨찾기…' |
+| 앱 바의 뒤로 가기 버튼이 화면낭독기에 영어 `Back` 으로 읽혔다 (Material 한국어 번역 없음) | `pubspec.yaml` 에 `flutter_localizations`, `main.dart` 에 `locale: ko` + `GlobalMaterialLocalizations.delegates` | `widget_test.dart` '앱 바의 뒤로 가기 버튼은 … 한국어로 읽힌다' |
+| 테마의 `visualDensity: comfortable` 이 실제로는 -4dp 라 버튼·칩의 터치 영역이 44dp 였다 | `main.dart` → `VisualDensity.standard` | `accessibility_test.dart` 의 `androidTapTargetGuideline` |
+| 결과 화면의 '순서·거르기·거리' 제목이 칩과 떨어져 한 노드(`순서\n거르기\n거리`)로 읽혔다 | `results_screen.dart` `_Controls.group()` 제목을 `Semantics(container, header)` 로 | `accessibility_test.dart` (제목이 별도 헤더 노드인지) |
+| 설정 '내 정보 전부 지우기' 대화상자가 글자 2배·640dp 에서 본문이 잘렸다 | `settings_screen.dart` 대화상자 `scrollable: true` | `accessibility_test.dart` |
+| 데이터 출처 문구에 '국민건강보험공단'이 두 번 들어갔다 | `tools/build_data.py` `primary_care_source()`, `assets/data/meta.json` | `tools/test_build_outputs.py` |
+
+테스트를 쓸 때 알아 둘 것: 앱이 한국어라 `tester.pageBack()`(영어 `Back` 툴팁을 찾음)은 쓸 수 없고 `test/fakes.dart` 의 `goBack(tester)` 를 쓴다.
 
 ## 4. 기획서 대비 구현 현황
 
@@ -67,15 +81,15 @@
 | 6.4 [P1] 진료 시간 | 문구만 | '진료 시간과 쉬는 날은 병원에 전화로 확인하세요.' 아래 '남은 데이터 작업' 참고. |
 | 6.5 나의 진료 카드 (입력, 병원에 보여 주기, 큰 글씨·고대비, 화면 켜 두기, 가로 화면) | 완료 | 문장형 표시를 하고, 조사(이/가, 예요/이에요)를 받침에 맞춘다. |
 | 6.5 [P1] 자주 쓰는 문장, 보호자 바로 전화 | 완료 | |
-| 6.5 [P1] 앱 잠금 (생체·PIN) | 코드 완료, **실기기 미확인** | 1분 넘게 다른 앱에 있다 오면 다시 잠근다. |
+| 6.5 [P1] 앱 잠금 (생체·PIN) | 완료 (에뮬레이터에서 PIN 확인, **지문·실기기 미확인**) | 1분 넘게 다른 앱에 있다 오면 다시 잠근다. |
 | 6.5 [P2] 카드 이미지 저장·공유 | 안 함 | 로드맵 |
 | 6.6 즐겨찾기 + 최근 본 병원 20곳, 목록에서 바로 전화·길찾기 | 완료 | `saved_hospitals.dart` |
 | 6.7 설정 (글자 1.0~2.0배, 고대비, 내 정보 전부 지우기, 기준일·출처·업데이트, 처리방침, 라이선스, 문의, 버전) | 완료 | `settings_screen.dart`, `privacy_screen.dart` |
 | 6.8 [P1] 정보 오류 신고 (메일) | 완료 | 병원 ID·앱 버전·데이터 기준일만 붙이고 개인 정보는 넣지 않는다. |
 | 7.2 [P0] 편의시설 정보 없으면 감점 안 함 | 완료 | `Recommendation.unknown` |
 | 7.2 [P1] 점수표 설정 파일 분리 | 완료 | `data/scoring.json` → 데이터와 함께 배포하므로 앱 업데이트 없이 바뀐다. |
-| 7.2 시나리오 테스트 30개 | **남음** | 3장 3번 |
-| 9장 접근성 | 대부분 반영, **자동 점검 테스트 남음** | 아래 '접근성에서 한 것' 참고 |
+| 7.2 시나리오 테스트 30개 | 완료 | `test/recommender_scenarios_test.dart` 시나리오 40개 + 메타 2개 (장애 유형 16종·진료 목적 8종·나이·정도를 모두 덮는지, 추천 이유에 숫자가 없는지). 기대값은 손으로 계산했고 모두 코드와 일치했다. |
+| 9장 접근성 | 자동 점검 완료, **실기기 TalkBack 검수 남음** | `test/accessibility_test.dart` 14개: 360×640 화면에서 글자 1배·2배로 주요 화면을 모두 열어 넘침·잘린 글·터치 영역 48dp·라벨·글자 대비를 검사한다. 아래 '접근성에서 한 것' 참고 |
 | 10장 진료 카드 보안 저장소 | 완료 | 안드로이드는 Keystore 로 암호화하고 백업에서 뺀다. iOS 는 키체인 `first_unlock_this_device` 다. |
 | 4.2-6 편의시설 데이터 채우기 | 사용자 몫 | `tools/fetch_facilities.py` 를 하루 한 번 돌린다. 개발계정은 하루 100건이라 운영계정 신청이 필요하다. |
 
@@ -89,6 +103,7 @@
 - 업데이트 결과처럼 바뀌는 문구는 `liveRegion` 으로 읽어 준다.
 - 저절로 넘어가는 화면이 없다.
 - 지정 기관마다 '?' 도움말이 있다 (`help.dart`).
+- (2026-10-27 두 번째 세션) 터치 영역을 48dp 로 되돌렸고, 결과 화면 거르기 제목을 헤더로, Material 기본 라벨을 한국어로 했다. 접근성 테스트에서 뺀 것과 이유: 앱바 제목(Material 이 1.34배까지만 키우고 줄임표)·칩 라벨(한 줄 fade)·입력 칸 라벨(한 줄 줄임표)은 잘린 글 검사에서 뺐고, 글자 대비는 앱바 아래 끝·하단 탭 위 끝에 걸쳐 일부 가려진 글만 건너뛴다(테스트 글꼴이 속 빈 네모라 가린 색이 글자색으로 잡히는 오탐). 병원 정보의 `_Section`(추천 이유·지정 현황 등)은 헤더와 본문이 한 노드로 읽히는데 손대지 않았다 (3장 5번).
 
 ## 5. 코드 구조 (이번에 생기거나 크게 바뀐 파일)
 
@@ -126,9 +141,14 @@ lib/screens/privacy_screen.dart   개인정보 처리방침
 lib/screens/lock_gate.dart        앱 잠금 화면
 lib/screens/help.dart             지정 기관 설명
 lib/screens/data_notice.dart      '공공데이터 기준이라 실제와 다를 수 있어요…' 안내
-test/fakes.dart                   화면 테스트용 가짜 저장소·앱 만들기·도우미
+test/fakes.dart                   화면 테스트용 가짜 저장소·앱 만들기·도우미 (goBack 포함)
 test/card_and_settings_test.dart  진료 카드·설정·잠금 화면 테스트
+test/recommender_helpers.dart     (2차) 추천 테스트 공용 도우미 (seoul, hospital(), profile(), ids())
+test/recommender_scenarios_test.dart (2차) 기획서 7.2 시나리오 40개 (표 형식 Scenario)
+test/accessibility_test.dart      (2차) 기획서 9장 접근성 자동 점검 14개
 ```
+
+2차 세션에서 바뀐 앱 코드: `lib/main.dart`(한국어 로컬라이제이션, `VisualDensity.standard`), `lib/screens/app_shell.dart`(즐겨찾기·최근 본 병원 읽기), `lib/screens/results_screen.dart`(거르기 제목 Semantics), `lib/screens/settings_screen.dart`(지우기 대화상자 scrollable), `pubspec.yaml`(`flutter_localizations`), `tools/build_data.py`(`primary_care_source`).
 
 ## 6. 데이터 형식 변경 (예전 앱과 호환됨)
 
@@ -156,17 +176,49 @@ test/card_and_settings_test.dart  진료 카드·설정·잠금 화면 테스트
   - 휴대폰에 설치할 APK 는 `flutter build apk --release --split-per-abi` 로 만들어 `app-arm64-v8a-release.apk` (약 50MB 예상)를 쓴다.
   - 기획서 12.2 의 '데이터 포함 50MB 이하'는 스토어에는 AAB(`flutter build appbundle`)로 올려서 기기별로 받게 하면 맞출 수 있다. 지도 SDK 를 계속 쓸지는 사용자와 다시 정한다.
   - 빌드 경고: `flutter_naver_map` 이 Kotlin Gradle Plugin 을 직접 적용해서, 이후 Flutter 버전에서는 빌드가 실패할 수 있다고 나온다. Flutter 를 올리기 전에 플러그인 새 버전을 확인한다.
+- 2026-10-27 `flutter build apk --release --split-per-abi` (지도 키 없음): **성공**. arm64 **47.9MB**, armeabi-v7a 39.9MB, x86_64 50.6MB (한국어 로컬라이제이션을 넣기 전에는 47.5 / 39.5 / 50.2MB).
+  - 휴대폰 시험용은 `build\app\outputs\flutter-apk\app-arm64-v8a-release.apk` 를 쓴다. 기획서 12.2 의 50MB 안에 든다.
+  - split APK 의 버전 코드에는 ABI 번호가 붙는다 (x86_64 는 앱 정보에 `1.0.0 (4001)`, arm64 는 3001). AAB 는 원래 번호다.
+  - 지도 SDK 를 계속 쓸지(빼면 ABI 당 약 25MB 줄어든다)는 아직 사용자와 정하지 않았다.
+
+## 7-1. 에뮬레이터 점검 기록 (2026-10-27)
+
+AVD `Medium_Phone_API_37.0` (Android 17, x86_64, 1080×2400, 420dpi) 에 `app-x86_64-release.apk` 를 설치해서 봤다.
+
+- **흐름**: 첫 실행 안내 3장 → 시작하기 → 홈 → 하단 탭 4개 → 병원 찾기 6단계 (뇌병변·심한·재활·성인·편의시설 4개 미리 선택됨·서울 강남구) → 결과 (1. 청담병원, 지정 재활의료기관, 약 1.4km) → 상세 → '?' 도움말 → 정보가 틀렸어요 → 메일로 보내기 → 진료 카드 만들기·저장 → 병원에 보여 주기 → 즐겨찾기(최근 본 병원) → 설정 → 개인정보 처리방침 → 오픈소스 라이선스. **모두 정상**.
+- **메일 앱 열기**: `mailto:` 로 Gmail 이 열렸다 (에뮬레이터는 계정이 없어 환영 화면). 뒤로 오면 앱이 그대로 있다.
+- **진료 카드 보안 저장**: 저장 → 탭에 문장형으로 보임. 로마자 이름은 `Kim(이)에요` 처럼 조사를 둘 다 붙인다.
+- **화면 켜 두기**: 보여 주기 화면에서 `adb shell dumpsys window windows | grep -c KEEP_SCREEN_ON` 이 1, 닫으면 0.
+- **앱 잠금**: `adb shell locksettings set-pin 1234` 뒤 설정에서 켜면 BiometricPrompt(기기 비밀번호)가 뜨고, PIN 을 넣으면 켜진다. 홈으로 나가 65초 뒤 다시 열면 인증 창이 저절로 뜨고, 취소하면 '함께병원이 잠겨 있어요' + '잠금 풀기' 화면이다. 풀면 나가기 전 화면(설정)으로 돌아온다. **지문은 시험하지 않았다** (에뮬레이터에 지문을 등록해야 한다).
+- **화면낭독기 순서**: `adb shell uiautomator dump` 로 보면 결과 카드가 `1. 청담병원, 약 1.4km, 정부 지정 기관, 보건복지부 지정 재활의료기관, 진료과: 재활의학과` 한 덩어리로 읽힌다. 여기서 찾은 문제 둘은 이번에 고쳤다: 결과 화면의 '순서·거르기·거리' 제목 글이 칩과 떨어져 한 노드로 묶이던 것, 앱 바 뒤로 가기 버튼이 영어 `Back` 으로 읽히던 것 ([3-1장](#3-1-2026-10-27-두-번째-세션에서-고친-것)).
+- **휴대폰 글꼴 200%** (`adb shell settings put system font_scale 2.0`): 안내·홈·찾기·결과·상세·진료 카드·설정 모두 잘림·겹침 없음. 상세의 버튼은 한 줄에 하나씩 놓인다. 끝나면 `font_scale 1.0` 으로 되돌린다.
+- **알아낸 것**:
+  - 인증 창은 보안 창이라 `screencap` 이 검게 나온다. `adb shell dumpsys window | grep mCurrentFocus` 가 `BiometricPrompt` 이면 떠 있는 것이다. PIN 은 `input text 1234` + `input keyevent 66`.
+  - `pm clear` 직후 첫 캡처에는 아래쪽에 검은 띠(시스템 전환 효과)가 몇 초 남는다. 앱 결함이 아니다.
+  - 긴 대기는 `adb shell sleep 65` 처럼 기기 쪽에서 한다.
+  - 설정 화면은 탭 막대가 없는 별도 화면이라, 거기서 하단 탭 자리를 누르면 '잠겨 있어도 보여 주기' 스위치를 건드린다.
+- **남은 것**: 네이버 지도 화면(키 없음), 지문, 실기기.
 
 ## 8. 명령 모음
 
 ```bash
 export PATH="/c/dev/flutter/bin:$PATH"   # Git Bash 에서 Flutter 쓰기
 flutter analyze
-flutter test                                    # 104개
-python -m unittest discover -s tools            # 19개
+flutter test                                    # 아래 1장 참고
+python -m unittest discover -s tools            # 20개
 python tools/verify_data.py                     # 앱에 든 데이터 검사
-flutter build apk --release                     # 지도 없이
+flutter build apk --release --split-per-abi     # 휴대폰용: app-arm64-v8a-release.apk
 flutter build apk --release --dart-define=NAVER_MAP_CLIENT_ID=발급받은ID
+flutter build appbundle --release               # 스토어용 AAB
+
+# 에뮬레이터 (Git Bash)
+"$LOCALAPPDATA/Android/Sdk/emulator/emulator" -avd Medium_Phone_API_37.0 -no-snapshot &
+adb install -r C:/.../build/app/outputs/flutter-apk/app-x86_64-release.apk
+adb shell am start -n kr.hamkkehospital.app/.MainActivity
+adb exec-out screencap -p > shot.png            # 화면 캡처
+MSYS_NO_PATHCONV=1 adb shell uiautomator dump /sdcard/ui.xml   # 화면낭독기 라벨·순서 확인
+adb shell locksettings set-pin 1234             # 앱 잠금 시험용 (지우기: locksettings clear --old 1234)
+adb shell settings put system font_scale 2.0    # 글꼴 200% (끝나면 1.0)
 ```
 
 ## 9. 개발 환경과 알아낸 것

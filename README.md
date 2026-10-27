@@ -39,8 +39,12 @@ flutter run
 | `DATA_BASE_URL` | data 브랜치 주소 | 새 병원 데이터를 받는 곳. 빈 값이면 앱에 든 데이터만 쓴다 |
 
 ```bash
-flutter build apk --release --dart-define=NAVER_MAP_CLIENT_ID=발급받은ID
+flutter build apk --release --split-per-abi --dart-define=NAVER_MAP_CLIENT_ID=발급받은ID   # 휴대폰용: app-arm64-v8a-release.apk (약 48MB)
+flutter build appbundle --release --dart-define=NAVER_MAP_CLIENT_ID=발급받은ID             # 스토어용
 ```
+
+ABI 를 모두 넣은 하나의 APK(`flutter build apk --release`)는 네이버 지도 SDK 때문에 120MB 가 넘으니, 휴대폰에는
+ABI 별 APK 를, 스토어에는 AAB 를 씁니다.
 
 PR 과 푸시마다 GitHub Actions(`.github/workflows/ci.yml`)가 `flutter analyze`, `flutter test`, Python 스크립트
 테스트, 앱에 든 데이터 검사를 돌립니다. Flutter 를 올리면 이 파일의 `flutter-version` 도 함께 바꿉니다.
