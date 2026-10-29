@@ -39,12 +39,13 @@ flutter:
     - assets/data/
     - assets/data/hospitals/
 
-# 앱 아이콘. 원본은 assets/icon/ (앱에 넣지 않는다). 바꾸면 `dart run flutter_launcher_icons` 를 돌린다.
+# 앱 아이콘. 원본은 assets/icon/ (앱에 넣지 않는다). `python tools/make_icon.py assets/icon 5B3FA0` 으로
+# 다시 그리고 `dart run flutter_launcher_icons` 를 돌린다. 색은 lib/main.dart 의 _seed 와 같아야 한다.
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/icon.png"
-  adaptive_icon_background: "#1B6E5A"
+  adaptive_icon_background: "#5B3FA0"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
   adaptive_icon_monochrome: "assets/icon/icon_monochrome.png"
   remove_alpha_ios: true

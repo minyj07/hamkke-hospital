@@ -114,7 +114,9 @@ class HamkkeApp extends StatelessWidget {
 
   final AppServices services;
 
-  static const _seed = Color(0xFF1B6E5A);
+  /// 앱의 기본 색 (보라). 아이콘(tools/make_icon.py)·스플래시(res/values/colors.xml)·
+  /// 바로가기 아이콘(res/drawable/ic_shortcut_*.xml)도 같은 색을 쓴다. 바꾸면 함께 바꾼다.
+  static const _seed = Color(0xFF5B3FA0);
 
   /// 넓은 터치 영역을 기본으로 하고, 고대비 모드면 글자와 배경의 대비를 가장 크게 한다.
   static ThemeData _theme(Brightness brightness, {required bool highContrast}) => ThemeData(

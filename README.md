@@ -66,9 +66,12 @@ storeFile=C:/Users/<사용자>/hamkke-upload.jks
 
 ### 앱 아이콘과 홈 화면 바로가기
 
-- 아이콘 원본은 `assets/icon/` 에 있고(앱에는 넣지 않음), 바꾸면 `dart run flutter_launcher_icons` 로
-  안드로이드(적응형·테마 아이콘 포함)와 iOS 아이콘을 다시 만듭니다. 스플래시 배경색은
-  `android/app/src/main/res/values/colors.xml` 의 `splash_background` 입니다.
+- 아이콘 원본은 `assets/icon/` 에 있고(앱에는 넣지 않음), `python tools/make_icon.py assets/icon 5B3FA0`
+  (Pillow 필요)으로 그린 뒤 `dart run flutter_launcher_icons` 로 안드로이드(적응형·테마 아이콘 포함)와 iOS
+  아이콘을 다시 만듭니다. 앱의 기본 색은 `lib/main.dart` 의 `_seed`(보라 #5B3FA0)이고, 바꿀 때는 아이콘 색 인자,
+  pubspec 의 `adaptive_icon_background`, 스플래시 배경(`res/values(-night)/colors.xml` 의 `splash_background`),
+  바로가기 아이콘(`res/drawable/ic_shortcut_*.xml`)도 함께 바꿉니다. 홈 화면 앱 바의 로고(`lib/screens/logo.dart`)는
+  테마 색을 따라갑니다.
 - 홈 화면에서 앱 아이콘을 길게 누르면 '병원 찾기', '진료 카드 보여 주기', '즐겨찾기' 바로가기가 나옵니다
   (`quick_actions`, `lib/main.dart` 의 `_setUpShortcuts`, 아이콘은 `res/drawable/ic_shortcut_*.xml`).
   바로가기 아이콘은 이름으로 찾는 리소스라 릴리스 빌드의 리소스 축소에서 지워지지 않게 `res/raw/keep.xml` 에 적어 둡니다.

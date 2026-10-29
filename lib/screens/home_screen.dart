@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/search_conditions.dart';
 import 'app_scope.dart';
 import 'app_shell.dart';
+import 'logo.dart';
 import 'results_launcher.dart';
 import 'search_screen.dart';
 import 'settings_screen.dart';
@@ -43,7 +44,15 @@ class _HomeScreenState extends State<HomeScreen> with ResultsLauncher {
     final shell = AppShell.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('함께병원'),
+        // 로고는 장식이라 읽지 않고, 제목 글이 앱 이름을 말한다.
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LogoMark(size: 32),
+            SizedBox(width: 10),
+            Text('함께병원'),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),

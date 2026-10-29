@@ -25,6 +25,7 @@
 | 상태 관리 | Riverpod 를 쓰지 않고 기존 방식(ChangeNotifier + `AppScope` InheritedWidget)을 유지한다. | `lib/screens/app_scope.dart` |
 | 익명 사용 통계 (미결 5) | 넣지 않았다. 아직 정하지 않음. | — |
 | 앱 언어 | 한국어만. Material 기본 라벨(뒤로 가기 '뒤로', 라이선스 화면 등)도 휴대폰 언어와 상관없이 한국어다. | `lib/main.dart` 의 `locale`, `localizationsDelegates` |
+| 앱 기본 색 | **보라 #5B3FA0** (2026-10-29, 후보 6개 그림 중 D). 처음 초록(#1B6E5A)에서 바꿨다. 테마·아이콘·스플래시·바로가기 아이콘·홈 로고가 모두 이 색이다. | `lib/main.dart` 의 `_seed`, 바꾸는 법은 [3-2장](#3-2-2026-10-29-배포-준비-앱처럼-보이게) 아이콘 행 |
 
 ## 2-1. 사용자와 상의할 것
 
@@ -69,7 +70,7 @@
 
 | 한 것 | 어디 | 비고 |
 |---|---|---|
-| **앱 아이콘**: 초록(#1B6E5A) 바탕에 흰 십자, 가운데 하트. 안드로이드 적응형(원·둥근 네모 마스크 대응)·단색(테마 아이콘)·iOS 아이콘 | 원본 `assets/icon/` (앱에 넣지 않음), 생성은 `dart run flutter_launcher_icons` (pubspec 의 `flutter_launcher_icons` 설정) | 원본은 스크래치 스크립트로 그렸다(PIL). 바꾸려면 `assets/icon/*.png` 를 새로 그리고 생성 명령을 다시 돌린다. 적응형 앞면은 생성기가 16% 안쪽으로 넣으므로 1/0.68 배로 크게 그려 둔 것이다. |
+| **앱 아이콘**: 보라(#5B3FA0, 사용자가 고른 색) 바탕에 흰 십자, 가운데 하트. 안드로이드 적응형(원·둥근 네모 마스크 대응)·단색(테마 아이콘)·iOS 아이콘 | 원본 `assets/icon/` (앱에 넣지 않음)은 `python tools/make_icon.py assets/icon 5B3FA0` 으로 그리고(Pillow 필요), 런처 아이콘은 `dart run flutter_launcher_icons` 로 만든다 (pubspec 의 `flutter_launcher_icons` 설정) | 적응형 앞면은 생성기가 16% 안쪽으로 넣으므로 스크립트가 1/0.68 배로 크게 그린다. **색을 바꿀 때 함께 바꿀 곳**: `lib/main.dart` `_seed`, pubspec `adaptive_icon_background`, `res/values(-night)/colors.xml` 의 `splash_background`, `res/drawable/ic_shortcut_*.xml` 의 `fillColor`, 아이콘 생성 명령의 색 인자. 앱 안 로고(`lib/screens/logo.dart` `LogoMark`, 홈 앱 바)는 테마 색을 따라 저절로 바뀐다. |
 | **스플래시**: 연한 초록 배경(다크 모드는 짙은 초록) + 안드로이드 12 이상은 시스템 스플래시에 앱 아이콘 | `res/values(-night)/colors.xml` 의 `splash_background`, `res/values(-night)-v31/styles.xml`, `drawable(-v21)/launch_background.xml` | iOS 는 아직 기본 흰 LaunchScreen 이다. |
 | **홈 화면 바로가기** (아이콘 길게 누르기): 병원 찾기 / 진료 카드 보여 주기(카드가 있으면 바로 보여 주기 화면, 없으면 카드 탭) / 즐겨찾기 | `quick_actions` 1.1.1, `lib/main.dart` `_setUpShortcuts`, `AppShortcut` enum 과 `AppServices.shortcut`(`app_scope.dart`), 받아서 여는 곳은 `app_shell.dart` `_openShortcut`, 아이콘 `res/drawable/ic_shortcut_*.xml` | 앱이 꺼진 채로 누르면 탭 화면이 생기기 전에 들어오므로 값으로 들고 있다가 첫 프레임 뒤에 연다. 테스트 3개(`widget_test.dart` '홈 화면 바로가기'). 잠겨 있으면 잠금 화면 아래에서 열려 있다가 풀면 보인다. 바로가기 아이콘 drawable 은 코드가 이름으로만 찾아서 릴리스 빌드의 리소스 축소가 지워 버린다(그러면 메뉴에 빈 흰 원만 보이고 `dumpsys shortcut` 에 `iconRes=0`). `res/raw/keep.xml` 의 `tools:keep` 으로 지킨다. 새 바로가기 아이콘을 더하면 거기에도 적는다. 에뮬레이터에서 시험할 때는 `adb shell "am start -n kr.hamkkehospital.app/.MainActivity -a android.intent.action.RUN --es 'some unique action key' card"` 처럼 따옴표를 기기 셸까지 전달해야 한다. |
 | **릴리스 서명**: `android/key.properties` 가 있으면 그 키, 없으면 디버그 키 | `android/app/build.gradle.kts` | **키는 사용자가 만든다** (README '스토어에 올리기 전: 서명 키'). 키를 만들기 전까지 릴리스 APK/AAB 는 디버그 서명이라 스토어에 못 올린다. |
