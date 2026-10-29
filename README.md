@@ -46,6 +46,33 @@ flutter build appbundle --release --dart-define=NAVER_MAP_CLIENT_ID=발급받은
 ABI 를 모두 넣은 하나의 APK(`flutter build apk --release`)는 네이버 지도 SDK 때문에 120MB 가 넘으니, 휴대폰에는
 ABI 별 APK 를, 스토어에는 AAB 를 씁니다.
 
+### 스토어에 올리기 전: 서명 키
+
+`android/key.properties` 가 있으면 릴리스 빌드를 그 키로 서명하고, 없으면(CI, 시험용) 디버그 키로 서명합니다.
+키 파일과 `key.properties` 는 저장소에 올리지 않습니다 (`android/.gitignore`). 키를 잃어버리면 같은 앱으로
+업데이트를 올릴 수 없으니 안전한 곳에 따로 보관합니다.
+
+```bash
+keytool -genkey -v -keystore "$USERPROFILE/hamkke-upload.jks" -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
+
+```properties
+# android/key.properties
+storePassword=<키 저장소 비밀번호>
+keyPassword=<키 비밀번호>
+keyAlias=upload
+storeFile=C:/Users/<사용자>/hamkke-upload.jks
+```
+
+### 앱 아이콘과 홈 화면 바로가기
+
+- 아이콘 원본은 `assets/icon/` 에 있고(앱에는 넣지 않음), 바꾸면 `dart run flutter_launcher_icons` 로
+  안드로이드(적응형·테마 아이콘 포함)와 iOS 아이콘을 다시 만듭니다. 스플래시 배경색은
+  `android/app/src/main/res/values/colors.xml` 의 `splash_background` 입니다.
+- 홈 화면에서 앱 아이콘을 길게 누르면 '병원 찾기', '진료 카드 보여 주기', '즐겨찾기' 바로가기가 나옵니다
+  (`quick_actions`, `lib/main.dart` 의 `_setUpShortcuts`, 아이콘은 `res/drawable/ic_shortcut_*.xml`).
+  바로가기 아이콘은 이름으로 찾는 리소스라 릴리스 빌드의 리소스 축소에서 지워지지 않게 `res/raw/keep.xml` 에 적어 둡니다.
+
 PR 과 푸시마다 GitHub Actions(`.github/workflows/ci.yml`)가 `flutter analyze`, `flutter test`, Python 스크립트
 테스트, 앱에 든 데이터 검사를 돌립니다. Flutter 를 올리면 이 파일의 `flutter-version` 도 함께 바꿉니다.
 

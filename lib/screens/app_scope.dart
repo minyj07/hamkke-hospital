@@ -10,6 +10,20 @@ import '../services/location.dart';
 
 Future<void> _keepScreenOnNoop(bool on) async {}
 
+/// 휴대폰 홈 화면의 앱 바로가기 (아이콘을 길게 누르면 나온다). [name] 이 바로가기 종류 이름이다.
+enum AppShortcut {
+  find('병원 찾기', 'ic_shortcut_find'),
+  card('진료 카드 보여 주기', 'ic_shortcut_card'),
+  favorites('즐겨찾기', 'ic_shortcut_star');
+
+  const AppShortcut(this.label, this.icon);
+
+  final String label;
+
+  /// 안드로이드 drawable 이름 (android/app/src/main/res/drawable).
+  final String icon;
+}
+
 /// 화면들이 함께 쓰는 데이터와 기기 기능. 앱에 하나만 두고 [AppScope] 로 내려 준다.
 class AppServices {
   AppServices({
@@ -50,6 +64,10 @@ class AppServices {
 
   /// '내 정보 전부 지우기'를 할 때마다 1씩 오른다. 화면에 남은 장애 정보도 비우게 한다.
   final personalDataCleared = ValueNotifier(0);
+
+  /// 휴대폰 홈 화면에서 앱 아이콘을 길게 눌러 고른 바로가기 ([AppShortcut]). 탭 화면이 받아서 연 뒤 비운다.
+  /// 앱이 꺼져 있을 때 누르면 탭 화면이 생기기 전에 들어오므로, 값으로 들고 있다가 탭 화면이 생길 때 연다.
+  final shortcut = ValueNotifier<AppShortcut?>(null);
 
   /// 진료 카드, 지난번 검색 조건, 즐겨찾기, 최근 본 병원을 지운다. 화면 설정은 남긴다.
   Future<void> clearPersonalData() async {

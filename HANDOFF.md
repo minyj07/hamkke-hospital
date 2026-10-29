@@ -5,7 +5,7 @@
 ## 1. 지금 상태 한눈에
 
 - **하던 일**: 기획서(`C:\Users\minyj\OneDrive\문서\카카오톡 받은 파일\기획서.md`, v1.0, 2026-10-24)대로 앱을 MVP 수준으로 고치는 중. 2026-10-27 두 번째 세션에서 3장의 1~4번(APK 크기, 에뮬레이터 점검, 추천 시나리오 테스트, 접근성 자동 점검)을 끝내고 그 과정에서 찾은 결함 6개를 고쳤다 ([3-1장](#3-1-2026-10-27-두-번째-세션에서-고친-것)).
-- **코드**: 기획서 P0 과 P1 대부분을 구현했다. `flutter analyze` 문제 없음, Flutter 테스트 **162개**와 Python 테스트 **20개**가 통과한다.
+- **코드**: 기획서 P0 과 P1 대부분을 구현했다. `flutter analyze` 문제 없음, Flutter 테스트 **165개**와 Python 테스트 **20개**가 통과한다. 2026-10-29 에는 배포 준비(앱 아이콘·스플래시·홈 화면 바로가기·릴리스 서명 설정)를 더했다 ([3-2장](#3-2-2026-10-29-배포-준비-앱처럼-보이게)).
 - **아직 안 한 것**: 푸시, 데이터 배포, 네이버 지도 키·지도 화면 확인, 실기기(지문·TalkBack 실제 청취) 확인, 그리고 사용자가 정할 것 3가지([2-1장](#2-1-사용자와-상의할-것)). 자세한 순서는 [3장](#3-바로-이어서-할-일-순서대로)에 있다. README 는 새 기능과 ABI 별 빌드에 맞게 고쳐 두었다.
 - **Git**:
   - 저장소는 `github.com/minyj07/hamkke-hospital` 의 `main` 이다. `1d58a50` 이 1단계(이름 검색·즐겨찾기 등), `03dfb48` 이 2단계(기획서 MVP)다.
@@ -61,6 +61,19 @@
 | 데이터 출처 문구에 '국민건강보험공단'이 두 번 들어갔다 | `tools/build_data.py` `primary_care_source()`, `assets/data/meta.json` | `tools/test_build_outputs.py` |
 
 테스트를 쓸 때 알아 둘 것: 앱이 한국어라 `tester.pageBack()`(영어 `Back` 툴팁을 찾음)은 쓸 수 없고 `test/fakes.dart` 의 `goBack(tester)` 를 쓴다.
+
+## 3-2. 2026-10-29 배포 준비 ("앱처럼" 보이게)
+
+사용자 요청: "홈 화면 등 앱처럼 기본 기능을 더해 바로 배포해도 편하게 쓸 수 있게". Flutter 기본 아이콘·흰 스플래시·디버그 서명 상태였던 것을 채웠다.
+
+| 한 것 | 어디 | 비고 |
+|---|---|---|
+| **앱 아이콘**: 초록(#1B6E5A) 바탕에 흰 십자, 가운데 하트. 안드로이드 적응형(원·둥근 네모 마스크 대응)·단색(테마 아이콘)·iOS 아이콘 | 원본 `assets/icon/` (앱에 넣지 않음), 생성은 `dart run flutter_launcher_icons` (pubspec 의 `flutter_launcher_icons` 설정) | 원본은 스크래치 스크립트로 그렸다(PIL). 바꾸려면 `assets/icon/*.png` 를 새로 그리고 생성 명령을 다시 돌린다. 적응형 앞면은 생성기가 16% 안쪽으로 넣으므로 1/0.68 배로 크게 그려 둔 것이다. |
+| **스플래시**: 연한 초록 배경(다크 모드는 짙은 초록) + 안드로이드 12 이상은 시스템 스플래시에 앱 아이콘 | `res/values(-night)/colors.xml` 의 `splash_background`, `res/values(-night)-v31/styles.xml`, `drawable(-v21)/launch_background.xml` | iOS 는 아직 기본 흰 LaunchScreen 이다. |
+| **홈 화면 바로가기** (아이콘 길게 누르기): 병원 찾기 / 진료 카드 보여 주기(카드가 있으면 바로 보여 주기 화면, 없으면 카드 탭) / 즐겨찾기 | `quick_actions` 1.1.1, `lib/main.dart` `_setUpShortcuts`, `AppShortcut` enum 과 `AppServices.shortcut`(`app_scope.dart`), 받아서 여는 곳은 `app_shell.dart` `_openShortcut`, 아이콘 `res/drawable/ic_shortcut_*.xml` | 앱이 꺼진 채로 누르면 탭 화면이 생기기 전에 들어오므로 값으로 들고 있다가 첫 프레임 뒤에 연다. 테스트 3개(`widget_test.dart` '홈 화면 바로가기'). 잠겨 있으면 잠금 화면 아래에서 열려 있다가 풀면 보인다. 바로가기 아이콘 drawable 은 코드가 이름으로만 찾아서 릴리스 빌드의 리소스 축소가 지워 버린다(그러면 메뉴에 빈 흰 원만 보이고 `dumpsys shortcut` 에 `iconRes=0`). `res/raw/keep.xml` 의 `tools:keep` 으로 지킨다. 새 바로가기 아이콘을 더하면 거기에도 적는다. 에뮬레이터에서 시험할 때는 `adb shell "am start -n kr.hamkkehospital.app/.MainActivity -a android.intent.action.RUN --es 'some unique action key' card"` 처럼 따옴표를 기기 셸까지 전달해야 한다. |
+| **릴리스 서명**: `android/key.properties` 가 있으면 그 키, 없으면 디버그 키 | `android/app/build.gradle.kts` | **키는 사용자가 만든다** (README '스토어에 올리기 전: 서명 키'). 키를 만들기 전까지 릴리스 APK/AAB 는 디버그 서명이라 스토어에 못 올린다. |
+
+**아직 안 한 것 / 사용자 몫**: 서명 키 생성(README), 스토어 등록 정보(스크린샷, 설명, 개인정보 처리방침 **URL** — 앱 안의 처리방침 글을 GitHub Pages 나 저장소 파일로 올려야 한다), iOS 스플래시·빌드 확인(맥 필요), 홈 화면 **위젯**(진료 카드 한 장짜리)은 네이티브 코드가 필요해 넣지 않았다.
 
 ## 4. 기획서 대비 구현 현황
 

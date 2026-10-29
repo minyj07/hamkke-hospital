@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 릴리스 빌드의 리소스 축소(shrinkResources)가 코드에서 이름으로만 찾는 리소스를 지우지 않게 한다.
+     홈 화면 바로가기 아이콘은 quick_actions 가 실행 중에 getIdentifier 로 찾는다 (lib/main.dart). -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_shortcut_find,@drawable/ic_shortcut_card,@drawable/ic_shortcut_star" />

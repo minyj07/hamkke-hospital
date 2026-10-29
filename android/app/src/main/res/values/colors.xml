@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 앱이 뜨는 동안 보이는 스플래시 배경. 앱 화면의 밝은 바탕과 비슷한 연한 초록이다. -->
+    <color name="splash_background">#EAF4EF</color>
+	<color name="ic_launcher_background">#1B6E5A</color>
+</resources>

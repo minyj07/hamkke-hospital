@@ -6,6 +6,7 @@ import 'package:hamkke_hospital/models/care_card.dart';
 import 'package:hamkke_hospital/models/disability.dart';
 import 'package:hamkke_hospital/models/hospital.dart';
 import 'package:hamkke_hospital/models/search_conditions.dart';
+import 'package:hamkke_hospital/screens/app_scope.dart';
 import 'package:hamkke_hospital/services/location.dart';
 
 import 'fakes.dart';
@@ -596,5 +597,45 @@ void main() {
 
     expect(find.byTooltip('뒤로'), findsOneWidget);
     expect(find.byTooltip('Back'), findsNothing);
+  });
+
+  group('홈 화면 바로가기', () {
+    const card = CareCard(name: '김함께', types: {DisabilityType.hearing}, severity: Severity.severe);
+
+    testWidgets('앱이 켜진 뒤 누르면 그 탭으로 가고, 진료 카드가 있으면 바로 병원에 보여 준다', (tester) async {
+      final services = await makeServices(careCardStore: FakeCareCardStore(card));
+      await pumpApp(tester, services);
+
+      services.shortcut.value = AppShortcut.favorites;
+      await tester.pumpAndSettle();
+      expect(find.textContaining('즐겨찾기한 병원이 없어요'), findsOneWidget);
+      // 한 번 연 바로가기는 비워서, 탭을 다시 만들어도 또 열지 않는다.
+      expect(services.shortcut.value, isNull);
+
+      services.shortcut.value = AppShortcut.card;
+      await tester.pumpAndSettle();
+      expect(find.text('안녕하세요. 저는 김함께예요.'), findsOneWidget);
+      expect(find.text('나의 진료 카드'), findsNothing);
+    });
+
+    testWidgets('카드를 아직 만들지 않았으면 진료 카드 바로가기는 카드 탭만 연다', (tester) async {
+      final services = await makeServices();
+      await pumpApp(tester, services);
+
+      services.shortcut.value = AppShortcut.card;
+      await tester.pumpAndSettle();
+      expect(find.text('진료 카드 만들기'), findsOneWidget);
+      expect(find.text('병원에 보여 주기'), findsNothing);
+    });
+
+    testWidgets('꺼져 있던 앱을 바로가기로 켜면 첫 화면이 생긴 뒤 그 화면을 연다', (tester) async {
+      final services = await makeServices();
+      // 바로가기는 탭 화면이 생기기 전에 들어온다.
+      services.shortcut.value = AppShortcut.find;
+      await pumpApp(tester, services);
+
+      expect(find.text('어떤 장애가 있으신가요?'), findsOneWidget);
+      expect(services.shortcut.value, isNull);
+    });
   });
 }

@@ -24,11 +24,13 @@ dependencies:
   local_auth: ^3.0.2
   wakelock_plus: ^1.8.0
   package_info_plus: ^10.2.2
+  quick_actions: ^1.1.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
@@ -36,3 +38,13 @@ flutter:
   assets:
     - assets/data/
     - assets/data/hospitals/
+
+# 앱 아이콘. 원본은 assets/icon/ (앱에 넣지 않는다). 바꾸면 `dart run flutter_launcher_icons` 를 돌린다.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#1B6E5A"
+  adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  adaptive_icon_monochrome: "assets/icon/icon_monochrome.png"
+  remove_alpha_ios: true

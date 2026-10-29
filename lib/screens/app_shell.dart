@@ -37,14 +37,44 @@ class AppShellState extends State<AppShell> {
   AppTab _tab = AppTab.home;
   final _find = GlobalKey<FindScreenState>();
 
+  late final AppServices _services = AppScope.of(context);
+
   @override
   void initState() {
     super.initState();
     // 즐겨찾기·최근 본 병원은 탭과 병원 정보 화면이 함께 쓰므로 탭이 생길 때 한 번 읽어 둔다.
     // 안 읽으면 다음에 켰을 때 목록을 바꾸기 전까지 비어 보인다.
-    final services = AppScope.of(context);
-    unawaited(services.favorites.load());
-    unawaited(services.recent.load());
+    unawaited(_services.favorites.load());
+    unawaited(_services.recent.load());
+    // 홈 화면 바로가기로 켰으면 첫 화면을 그린 뒤에 그 화면으로 간다.
+    _services.shortcut.addListener(_openShortcut);
+    if (_services.shortcut.value != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openShortcut());
+    }
+  }
+
+  @override
+  void dispose() {
+    _services.shortcut.removeListener(_openShortcut);
+    super.dispose();
+  }
+
+  /// 홈 화면 바로가기가 가리키는 화면을 연다. 진료 카드는 만들어 두었으면 바로 '병원에 보여 주기'를 연다.
+  void _openShortcut() {
+    final shortcut = _services.shortcut.value;
+    if (shortcut == null || !mounted) return;
+    _services.shortcut.value = null;
+    switch (shortcut) {
+      case AppShortcut.find:
+        showTab(AppTab.find);
+      case AppShortcut.favorites:
+        showTab(AppTab.favorites);
+      case AppShortcut.card:
+        showTab(AppTab.card);
+        if (_services.careCard.card != null) {
+          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShowCardScreen()));
+        }
+    }
   }
 
   void showTab(AppTab tab) => setState(() => _tab = tab);

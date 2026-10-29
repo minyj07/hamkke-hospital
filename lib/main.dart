@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:quick_actions/quick_actions.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import 'config.dart';
@@ -29,23 +30,40 @@ Future<void> main() async {
   final settings = AppSettings(FileSettingsStore());
   final (_, mapEnabled, appVersion) =
       await (settings.load(), _initMap(), _appVersion()).wait;
-  runApp(HamkkeApp(
-    services: AppServices(
-      repository: repository,
-      locationService: DeviceLocationService(),
-      lastSearch: LastSearch(FileLastSearchStore()),
-      favorites: Favorites(FileSavedHospitalsStore(favoritesFileName)),
-      recent: RecentHospitals(FileSavedHospitalsStore(recentFileName)),
-      careCard: SavedCareCard(SecureCareCardStore()),
-      settings: settings,
-      appLock: DeviceAppLock(),
-      mapEnabled: mapEnabled,
-      appVersion: appVersion,
-      contactEmail: contactEmail,
-      keepScreenOn: _keepScreenOn,
-    ),
-  ));
+  final services = AppServices(
+    repository: repository,
+    locationService: DeviceLocationService(),
+    lastSearch: LastSearch(FileLastSearchStore()),
+    favorites: Favorites(FileSavedHospitalsStore(favoritesFileName)),
+    recent: RecentHospitals(FileSavedHospitalsStore(recentFileName)),
+    careCard: SavedCareCard(SecureCareCardStore()),
+    settings: settings,
+    appLock: DeviceAppLock(),
+    mapEnabled: mapEnabled,
+    appVersion: appVersion,
+    contactEmail: contactEmail,
+    keepScreenOn: _keepScreenOn,
+  );
+  runApp(HamkkeApp(services: services));
   _keepUpdated(repository);
+  unawaited(_setUpShortcuts(services));
+}
+
+/// 휴대폰 홈 화면에서 앱 아이콘을 길게 누르면 나오는 바로가기(병원 찾기, 진료 카드 보여 주기, 즐겨찾기)를
+/// 등록한다. 누르면 [AppServices.shortcut] 에 넣고, 탭 화면이 그 화면을 연다.
+Future<void> _setUpShortcuts(AppServices services) async {
+  try {
+    final actions = QuickActions();
+    await actions.initialize((type) {
+      services.shortcut.value = AppShortcut.values.asNameMap()[type];
+    });
+    await actions.setShortcutItems([
+      for (final s in AppShortcut.values)
+        ShortcutItem(type: s.name, localizedTitle: s.label, icon: s.icon),
+    ]);
+  } catch (e) {
+    debugPrint('홈 화면 바로가기를 만들지 못했어요: $e');
+  }
 }
 
 /// 지도 키가 있으면 네이버 지도를 쓸 준비를 한다. 쓸 수 있으면 true.
