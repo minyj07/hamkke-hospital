@@ -59,8 +59,8 @@ flutter:
         - asset: assets/fonts/PretendardStd-ExtraBold.otf
           weight: 800
 
-# 앱 아이콘: 흰 바탕에 메디움 로고. 원본 PNG(assets/icon/, 앱에는 넣지 않음)는 로고 SVG 로 그린다.
-# 로고를 바꾸면 `RENDER_ICONS=1 flutter test test/tools/render_brand_icons_test.dart` 뒤
+# 앱 아이콘: 흰 바탕에 메디움 아이콘(assets/icon/app_icon.svg, 2026-10-30 사용자가 준 medium.svg).
+# 원본 PNG(assets/icon/, 앱에는 넣지 않음)는 이 SVG 로 그린다. 아이콘을 바꾸면 `RENDER_ICONS=1 flutter test test/tools/render_brand_icons_test.dart` 뒤
 # `dart run flutter_launcher_icons` 를 돌린다.
 flutter_launcher_icons:
   android: true
