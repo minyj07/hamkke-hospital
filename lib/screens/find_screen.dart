@@ -69,6 +69,9 @@ class FindScreenState extends State<FindScreen> with ResultsLauncher {
   /// 장애 유형·정도를 이번에 직접 골랐는지. 고르기 전이면 진료 카드가 바뀔 때 카드로 다시 채운다.
   bool _disabilityTouched = false;
 
+  /// 'AI로 말해서 찾기'에서 알아낸 조건으로 채웠는지. 첫 단계 설명에 알린다.
+  bool _filledByAi = false;
+
   @override
   void initState() {
     super.initState();
@@ -119,19 +122,23 @@ class FindScreenState extends State<FindScreen> with ResultsLauncher {
   }
 
   /// [c] 의 조건을 고른 것으로 채운다.
-  void _apply(SearchConditions c) {
+  void _apply(SearchConditions c) => _fill(c.toDraft());
+
+  /// [d] 의 조건을 고른 것으로 채운다. 모르는 것은 비워 둔다.
+  void _fill(SearchDraft d) {
     _types
       ..clear()
-      ..addAll(c.types);
-    _otherDisability.text = c.otherDisability;
-    _severity = c.severity;
-    _need = c.need;
-    _otherNeed.text = c.otherNeed;
-    _age = c.age;
-    _facilities = c.facilities == null ? null : {...c.facilities!};
+      ..addAll(d.types);
+    _otherDisability.text = d.otherDisability;
+    _severity = d.severity;
+    _need = d.need;
+    _otherNeed.text = d.otherNeed;
+    _age = d.age;
+    _facilities = d.facilities == null ? null : {...d.facilities!};
     _region = null;
     _area = null;
-    if (c.regionCode case final code?) _selectRegion(code, c.districtName);
+    _filledByAi = false;
+    if (d.regionCode case final code?) _selectRegion(code, d.districtName);
   }
 
   /// 지역 목록을 읽은 뒤 [code] 시·도와 [district] 를 고른다.
@@ -157,6 +164,14 @@ class FindScreenState extends State<FindScreen> with ResultsLauncher {
         _step = step;
       });
 
+  /// 'AI로 말해서 찾기'에서 고치러 왔을 때: AI 가 알아낸 [d] 로 채우고 [step] 단계를 연다.
+  void prefill(SearchDraft d, FindStep step) => setState(() {
+        _fill(d);
+        _filledByAi = true;
+        _disabilityTouched = true;
+        _step = step;
+      });
+
   /// 내 정보를 지운 뒤 고른 것을 모두 비운다.
   void reset() => setState(() {
         _types.clear();
@@ -169,6 +184,7 @@ class FindScreenState extends State<FindScreen> with ResultsLauncher {
         _region = null;
         _area = null;
         _disabilityTouched = false;
+        _filledByAi = false;
         _step = FindStep.types;
       });
 
@@ -230,9 +246,11 @@ class FindScreenState extends State<FindScreen> with ResultsLauncher {
 
   /// 제목 아래 설명 (디자인: 14 회색). 없으면 null.
   String? get _description => switch (_step) {
-        FindStep.types => _filledFromCard
-            ? '나의 진료 카드에 적은 장애로 미리 골라 두었어요. 여러 개를 고를 수 있어요.'
-            : '여러 개를 고를 수 있어요.',
+        FindStep.types => _filledByAi
+            ? 'AI가 알아들은 조건으로 미리 골라 두었어요. 단계마다 맞는지 확인해 주세요. 여러 개를 고를 수 있어요.'
+            : _filledFromCard
+                ? '나의 진료 카드에 적은 장애로 미리 골라 두었어요. 여러 개를 고를 수 있어요.'
+                : '여러 개를 고를 수 있어요.',
         FindStep.severity => '2019년 7월부터 1~6급 장애등급 대신 이 두 가지로 구분해요.',
         FindStep.need => '하나만 고를 수 있어요.',
         FindStep.age => '어린이·청소년이면 소아청소년과와 공공어린이재활병원을 먼저 보여 줘요.',

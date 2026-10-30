@@ -9,6 +9,7 @@ import 'package:hamkke_hospital/models/care_card.dart';
 import 'package:hamkke_hospital/models/disability.dart';
 import 'package:hamkke_hospital/models/hospital.dart';
 import 'package:hamkke_hospital/models/search_conditions.dart';
+import 'package:hamkke_hospital/screens/ai_find_screen.dart';
 import 'package:hamkke_hospital/screens/help.dart';
 
 import 'fakes.dart';
@@ -230,6 +231,33 @@ void main() {
 
         await tapAndSettle(tester, '개인정보 처리방침');
         await checkWholeScreen(tester, '개인정보 처리방침');
+      });
+
+      testWidgets('AI로 말해서 찾기: 빈 화면 → 예시로 알아본 조건과 장애 정도 묻기 → 설명 → 알아듣지 못한 글',
+          (tester) async {
+        preparePhone(tester);
+        await pumpApp(tester, await makeServices(settingsStore: settingsAt(scale)));
+        await tapAndSettle(tester, 'AI로 말해서 찾기');
+        await checkWholeScreen(tester, 'AI로 말해서 찾기');
+
+        await tapAndSettle(tester, aiExamples.first);
+        expect(find.text('AI가 이렇게 이해했어요'), findsOneWidget);
+        await checkWholeScreen(tester, 'AI로 말해서 찾기 (알아낸 조건, 장애 정도 묻기)');
+        await tapAndSettle(tester, '장애의 정도가 심한 장애인');
+        await checkWholeScreen(tester, 'AI로 말해서 찾기 (찾을 수 있음)');
+
+        await tapAndSettle(tester, 'AI는 어떻게 알아듣나요?');
+        await checkScreen(tester, 'AI 설명');
+        await tester.tap(find.text('닫기'));
+        await tester.pumpAndSettle();
+
+        await tester.scrollUntilVisible(find.byType(TextField), -200, scrollable: find.byType(Scrollable).first);
+        await tester.enterText(find.byType(TextField), '안녕하세요');
+        await tester.pump();
+        await tester.tap(find.text('AI로 조건 알아보기'));
+        await tester.pumpAndSettle();
+        expect(find.text('알아듣지 못했어요'), findsOneWidget);
+        await checkWholeScreen(tester, 'AI로 말해서 찾기 (알아듣지 못함)');
       });
 
       testWidgets('병원 찾기 6단계 → 추천 결과와 거르기 → 병원 정보, 지정 기관 설명, 정보 오류 신고',

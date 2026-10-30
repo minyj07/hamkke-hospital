@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hamkke_hospital/ai/intent_model.dart';
 import 'package:hamkke_hospital/data/app_settings.dart';
 import 'package:hamkke_hospital/data/care_card_store.dart';
 import 'package:hamkke_hospital/data/data_store.dart';
@@ -253,7 +256,10 @@ const gangnamRehab = SearchConditions(
   districtName: '강남구',
 );
 
-/// 가짜 저장소로 앱의 서비스를 만든다. 설정은 읽어 둔다.
+/// 앱에 든 AI 모델 파일 (assets/ai/intent_model.bin) 을 바로 읽는다.
+ByteData modelBytes() => ByteData.sublistView(File(IntentService.asset).readAsBytesSync());
+
+/// 가짜 저장소로 앱의 서비스를 만든다. 설정은 읽어 둔다. AI 는 앱에 든 모델을 그대로 쓴다.
 Future<AppServices> makeServices({
   LocationResult here = const LocationResult(37.5172, 127.0473),
   HospitalRepository? repository,
@@ -264,6 +270,7 @@ Future<AppServices> makeServices({
   CareCardStore? careCardStore,
   SettingsStore? settingsStore,
   AppLock? appLock,
+  IntentService? intent,
   String contactEmail = 'help@example.com',
   List<bool>? screenOn,
 }) async {
@@ -281,6 +288,7 @@ Future<AppServices> makeServices({
     appVersion: '1.0.0 (1)',
     contactEmail: contactEmail,
     keepScreenOn: (on) async => screenOn?.add(on),
+    intent: intent ?? IntentService(read: () async => modelBytes()),
   );
 }
 

@@ -220,6 +220,8 @@ void main() {
           favoritesStore: favorites,
         ),
       );
+      // 홈의 'AI로 말해서 찾기' 카드 아래에 있어서 굴려서 본다.
+      await scrollTo(tester, find.text('서울특별시 강남구 기준 · 가까운 순'));
       expect(find.text('서울특별시 강남구 기준 · 가까운 순'), findsOneWidget);
       expect(location.calls, 0);
 

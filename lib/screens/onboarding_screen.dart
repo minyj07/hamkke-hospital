@@ -18,7 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     (
       null, // 메디움 로고
       '나에게 맞는 병원을 찾아요',
-      '장애 유형과 필요한 진료를 고르면, 정부 지정 기관과 가까운 병원을 추천 이유와 함께 보여 줘요.',
+      '장애 유형과 필요한 진료를 고르거나 말로 설명하면, 정부 지정 기관과 가까운 병원을 추천 이유와 함께 보여 줘요.',
     ),
     (
       DesignIcons.card,

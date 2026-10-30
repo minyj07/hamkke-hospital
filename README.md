@@ -12,6 +12,9 @@
 - **하단 탭**: 홈 / 즐겨찾기 / 마이페이지(나의 진료 카드 요약, 자주 쓰는 문장, 설정)
 - **조건으로 찾기** (6단계, 진행 표시, 앱 바 화살표로 이전 단계): 장애 유형 → 정도 → 필요한 진료 → 나이(어린이·성인) → 필요한 편의시설
   → 지역(또는 현재 위치). 지난번 조건과 진료 카드의 장애 정보로 미리 골라 둔다
+- **AI로 말해서 찾기** (홈의 초록 카드): 상황을 말하듯 적으면(키보드의 음성 입력도 된다) 앱에 든 작은 신경망이 휴대폰 안에서
+  장애 유형·정도·진료·나이·편의시설을 알아내고, 지역은 지역 이름표로 찾는다. 'AI가 이렇게 이해했어요'로 보여 주고 글에 없는
+  장애 정도만 묻는다. 그 조건으로 바로 찾거나 병원 찾기 단계에서 고쳐서 찾는다. 적은 글은 기기 밖으로 보내지도 저장하지도 않는다
 - **결과**: 추천순·가까운 순, 지정 기관만·편의시설 정보 있는 곳만·5/10/20km 거르기, 목록/지도(네이버 지도 키가 있을 때),
   없는 편의시설 경고, 결과가 없으면 이웃 시·도까지 넓히기·진료 목적 바꾸기
 - **병원 정보**: 종별, 주소, 전화, 의사·전문의 수, 개원 연도, 홈페이지, 지정 현황(제도 설명 ‘?’), 진료과목,
@@ -43,7 +46,7 @@ flutter run
 | `DATA_BASE_URL` | data 브랜치 주소 | 새 병원 데이터를 받는 곳. 빈 값이면 앱에 든 데이터만 쓴다 |
 
 ```bash
-flutter build apk --release --split-per-abi --dart-define=NAVER_MAP_CLIENT_ID=발급받은ID   # 휴대폰용: app-arm64-v8a-release.apk (약 48MB)
+flutter build apk --release --split-per-abi --dart-define=NAVER_MAP_CLIENT_ID=발급받은ID   # 휴대폰용: app-arm64-v8a-release.apk (약 50MB)
 flutter build appbundle --release --dart-define=NAVER_MAP_CLIENT_ID=발급받은ID             # 스토어용
 ```
 
@@ -113,6 +116,28 @@ iOS 는 이 기기에서만 읽는 키체인), 내려받은 병원 데이터(`ho
 | `tools/verify_data.py` | 배포하기 전에 데이터를 검사한다 |
 | `.github/workflows/update-data.yml` | 매주 데이터를 새로 만들어 GitHub Pages 에 올린다 |
 | `.github/workflows/ci.yml` | PR·푸시마다 analyze 와 테스트를 돌린다 |
+
+## AI 모델 ('AI로 말해서 찾기')
+
+앱에 든 `assets/ai/intent_model.bin`(0.86MB)은 `tools/train_intent.py` 가 numpy 로 학습한 fastText 방식의 얕은 신경망입니다.
+낱말·글자 1~3개 조각·이웃한 두 낱말을 16,384칸으로 해시해 48차원 임베딩의 평균을 내고, 6갈래(장애 유형·진료 목적·장애 정도·
+어린이·편의시설·진료과)를 함께 맞힙니다. 휴대폰에서는 Dart 로 계산하며(`lib/ai/`) 인터넷·AI 서버·네이티브 라이브러리를 쓰지 않습니다.
+
+```bash
+pip install numpy
+cd tools
+python train_intent.py        # 약 2분. 모델, 앱 검사용 정답(test/ai/intent_golden.json), 평가 결과를 새로 쓴다
+```
+
+- 학습 문장은 `tools/intent_data.py` 가 표현 사전과 문장 틀로 만듭니다 (공공데이터에는 이런 문장이 없음). 표현의 4분의 1을 뺀
+  '검증 모델'로 처음 보는 표현을 얼마나 알아듣는지 재고, 앱에는 모든 표현으로 학습한 모델을 넣습니다.
+- 평가 문장은 `tools/intent_eval_set.py` 에 직접 썼습니다: 조정용(생성기 보강에 씀), 최종(그 전에 써 두었고 이것을 보고는 고치지 않음),
+  조건 없는 글. 결과는 `tools/intent_metrics.json` 입니다. 앱 모델은 최종 평가 40문장에서 장애 유형·진료 목적·어린이 여부를 모두
+  맞힌 비율이 95.0% 입니다 (같은 문장에서 키워드 방식 57.5%).
+- 특징 계산 `tools/intent_features.py` 와 `lib/ai/intent_features.dart` 는 글자 하나까지 같아야 합니다. 바꾸면 둘 다 바꾸고 다시 학습합니다.
+  `test/ai/intent_model_test.dart` 가 파이썬이 만든 정답과 특징 번호·확률(차이 100만분의 1 이하)·알아낸 조건을 비교합니다.
+- 장애 유형·진료·편의시설·진료과 이름을 바꾸면 `intent_data.py` 의 목록도 바꾸고 다시 학습합니다 (`tools/test_intent.py` 가 앱의 enum 과 비교).
+- 지역은 AI 가 아니라 `lib/ai/place_finder.dart` 가 지역 데이터의 시·도·시·군·구 이름(줄임말, 조사, '수원'처럼 구를 묶은 시 이름 포함)으로 찾습니다.
 
 ## 병원 데이터 만들기
 

@@ -35,7 +35,13 @@ enum DesignIcons {
   calendar('<rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M9 3v4M15 3v4"/>'),
   route('<path d="M12 2.5l9.5 9.5-9.5 9.5L2.5 12z"/><path d="M9 14v-2.5h5.5M12.5 9l2.5 2.5-2.5 2.5"/>'),
   share('<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/>'
-      '<path d="M8.2 10.8l7.6-4M8.2 13.2l7.6 4"/>');
+      '<path d="M8.2 10.8l7.6-4M8.2 13.2l7.6 4"/>'),
+  // AI로 말해서 찾기
+  talk('<path d="M5 4.5h14A1.5 1.5 0 0 1 20.5 6v9a1.5 1.5 0 0 1-1.5 1.5h-7.5L7 20v-3.5H5A1.5 1.5 0 0 1 3.5 15V6'
+      'A1.5 1.5 0 0 1 5 4.5z"/><path d="M8 10.5h.01M12 10.5h.01M16 10.5h.01"/>'),
+  sparkle('<path d="M12 3.5l1.9 5.4 5.6 2.1-5.6 2.1L12 18.5l-1.9-5.4L4.5 11l5.6-2.1z"/><path d="M19 3v3M17.5 4.5h3"/>'),
+  chevron('<path d="M9.5 6l6 6-6 6"/>'),
+  lock('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>');
 
   const DesignIcons(this.body);
 

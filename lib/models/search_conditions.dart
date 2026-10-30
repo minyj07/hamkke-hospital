@@ -85,6 +85,19 @@ class SearchConditions {
           'region': {'code': regionCode, 'name': regionName, 'district': ?districtName},
       };
 
+  /// 고친 조건으로 다시 찾을 때 쓰는 초안.
+  SearchDraft toDraft() => SearchDraft(
+        types: types,
+        otherDisability: otherDisability,
+        severity: severity,
+        need: need,
+        otherNeed: otherNeed,
+        age: age,
+        facilities: facilities,
+        regionCode: regionCode,
+        districtName: districtName,
+      );
+
   /// 앱이 모르는 값이 있으면 ArgumentError 를 던진다.
   factory SearchConditions.fromJson(Map<String, dynamic> json) {
     final region = json['region'] as Map<String, dynamic>?;
@@ -107,4 +120,34 @@ class SearchConditions {
       districtName: region?['district'] as String?,
     );
   }
+}
+
+/// 아직 다 고르지 않은 검색 조건. 병원 찾기를 미리 채울 때 쓴다 (예: AI 가 글에서 알아낸 조건).
+/// 모르는 것은 null 이나 빈 값이고, 병원 찾기에서 그 단계를 고르게 한다.
+class SearchDraft {
+  const SearchDraft({
+    this.types = const {},
+    this.otherDisability = '',
+    this.severity,
+    this.need,
+    this.otherNeed = '',
+    this.age,
+    this.facilities,
+    this.regionCode,
+    this.districtName,
+  });
+
+  final Set<DisabilityType> types;
+  final String otherDisability;
+  final Severity? severity;
+  final CareNeed? need;
+  final String otherNeed;
+  final AgeGroup? age;
+
+  /// 직접 고른 것으로 볼 편의시설. null 이면 장애 유형·정도·진료로 정한다.
+  final Set<Facility>? facilities;
+
+  /// 시·도 코드와 시·군·구 이름. 지역을 모르면 null 이다.
+  final String? regionCode;
+  final String? districtName;
 }

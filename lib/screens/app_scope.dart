@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../ai/intent_model.dart';
 import '../data/app_settings.dart';
 import '../data/care_card_store.dart';
 import '../data/hospital_repository.dart';
@@ -39,7 +40,8 @@ class AppServices {
     this.appVersion = '',
     this.contactEmail = '',
     this.keepScreenOn = _keepScreenOnNoop,
-  });
+    IntentService? intent,
+  }) : intent = intent ?? IntentService();
 
   final HospitalRepository repository;
   final LocationService locationService;
@@ -61,6 +63,9 @@ class AppServices {
 
   /// 진료 카드를 보여 주는 동안 화면이 꺼지지 않게 한다.
   final Future<void> Function(bool on) keepScreenOn;
+
+  /// 휴대폰 안에서 도는 상황 이해 AI ('AI로 말해서 찾기').
+  final IntentService intent;
 
   /// '내 정보 전부 지우기'를 할 때마다 1씩 오른다. 화면에 남은 장애 정보도 비우게 한다.
   final personalDataCleared = ValueNotifier(0);

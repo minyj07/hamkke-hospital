@@ -20,7 +20,7 @@ import 'hospital_actions.dart';
 import 'hospital_detail_screen.dart';
 import 'results_launcher.dart';
 
-/// 홈 (메디움 디자인): 로고, 큰 제목, 병원 검색, 바로가기 4개, 내 주변 병원, 자주 찾는 진료과.
+/// 홈 (메디움 디자인): 로고, 큰 제목, 병원 검색, AI로 말해서 찾기, 바로가기 4개, 내 주변 병원, 자주 찾는 진료과.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -279,7 +279,11 @@ class _HomeScreenState extends State<HomeScreen> with ResultsLauncher {
                     ),
                   ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 26, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: _AiCard(onPressed: () => shell.showTab(AppTab.ai)),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
                   child: _QuickActions(actions: [
                     _QuickAction('병원 찾기', DesignIcons.find, () => shell.showTab(AppTab.find)),
                     _QuickAction('나의 진료 카드', DesignIcons.card, () => _push(const CareCardScreen())),
@@ -556,6 +560,69 @@ class _SearchResults extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+/// 'AI로 말해서 찾기' (메디움 초록 바탕의 넓은 카드). 누르면 상황을 글로 적는 AI 화면을 연다.
+class _AiCard extends StatelessWidget {
+  const _AiCard({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = MediumColors.of(context);
+    return Semantics(
+      button: true,
+      label: 'AI로 말해서 찾기',
+      hint: '상황을 말하듯 적으면 AI가 병원 찾기 조건을 골라 드려요',
+      onTap: onPressed,
+      excludeSemantics: true,
+      child: Material(
+        color: c.brand,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: c.onBrand.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DesignIcon(DesignIcons.talk, size: 24, color: c.onBrand),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'AI로 말해서 찾기',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: -0.4, color: c.onBrand),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '상황을 말하듯 적으면 AI가 조건을 골라 드려요',
+                        style: TextStyle(fontSize: 13, height: 1.4, letterSpacing: -0.3, color: c.onBrand),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 6),
+                DesignIcon(DesignIcons.chevron, size: 20, strokeWidth: 2.4, color: c.onBrand),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

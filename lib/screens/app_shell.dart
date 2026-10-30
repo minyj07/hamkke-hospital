@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/search_conditions.dart';
 import '../ui/icons.dart';
 import '../ui/tokens.dart';
+import 'ai_find_screen.dart';
 import 'app_scope.dart';
 import 'care_card_screen.dart';
 import 'favorites_screen.dart';
@@ -12,9 +13,9 @@ import 'find_screen.dart';
 import 'home_screen.dart';
 import 'my_page_screen.dart';
 
-/// 탭 화면. 하단 탭은 홈·즐겨찾기·마이페이지 3개이고(메디움 디자인), 병원 찾기는 홈의 바로가기로
-/// 여는 화면이라 탭 막대에서는 '홈'이 켜져 있다. 탭을 바꿔도 각 화면에서 하던 것은 그대로 둔다.
-enum AppTab { home, find, favorites, my }
+/// 탭 화면. 하단 탭은 홈·즐겨찾기·마이페이지 3개이고(메디움 디자인), 병원 찾기와 AI로 말해서 찾기는
+/// 홈에서 여는 화면이라 탭 막대에서는 '홈'이 켜져 있다. 탭을 바꿔도 각 화면에서 하던 것은 그대로 둔다.
+enum AppTab { home, find, favorites, my, ai }
 
 /// 하단 탭 막대의 칸.
 enum _Destination {
@@ -40,6 +41,9 @@ class AppShell extends StatefulWidget {
 class AppShellState extends State<AppShell> {
   AppTab _tab = AppTab.home;
   final _find = GlobalKey<FindScreenState>();
+
+  /// AI 화면은 처음 열 때 만든다 (그때 AI 모델을 읽는다).
+  bool _aiOpened = false;
 
   late final AppServices _services = AppScope.of(context);
 
@@ -83,12 +87,21 @@ class AppShellState extends State<AppShell> {
 
   AppTab get tab => _tab;
 
-  void showTab(AppTab tab) => setState(() => _tab = tab);
+  void showTab(AppTab tab) => setState(() {
+        _tab = tab;
+        if (tab == AppTab.ai) _aiOpened = true;
+      });
 
   /// [conditions] 를 채운 병원 찾기의 [step] 단계를 연다 (결과 화면의 '진료 목적 바꾸기').
   void editSearch(SearchConditions conditions, FindStep step) {
     showTab(AppTab.find);
     _find.currentState?.edit(conditions, step);
+  }
+
+  /// AI 가 알아낸 [draft] 로 병원 찾기를 채우고 [step] 단계를 연다 ('AI로 말해서 찾기'의 '조건 고쳐서 찾기').
+  void prefillSearch(SearchDraft draft, FindStep step) {
+    showTab(AppTab.find);
+    _find.currentState?.prefill(draft, step);
   }
 
   /// 뒤로 가기: 병원 찾기는 이전 단계로, 다른 탭은 홈으로 간다.
@@ -98,7 +111,7 @@ class AppShellState extends State<AppShell> {
   }
 
   _Destination get _destination => switch (_tab) {
-        AppTab.home || AppTab.find => _Destination.home,
+        AppTab.home || AppTab.find || AppTab.ai => _Destination.home,
         AppTab.favorites => _Destination.favorites,
         AppTab.my => _Destination.my,
       };
@@ -119,6 +132,7 @@ class AppShellState extends State<AppShell> {
             FindScreen(key: _find),
             const FavoritesScreen(),
             const MyPageScreen(),
+            if (_aiOpened) const AiFindScreen() else const SizedBox.shrink(),
           ],
         ),
         // 디자인: 흰 탭 막대 위에 옅은 선과 그림자.
