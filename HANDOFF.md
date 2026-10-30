@@ -90,7 +90,7 @@
 | 한 것 | 어디 | 비고 |
 |---|---|---|
 | **디자인 시스템**: 색 토큰(밝게·어둡게·고대비 2가지), 테마(버튼·칩·입력 칸·앱 바·스낵바·하단 탭), 디자인 선 아이콘, 공통 부품(선택 줄, 진행 막대, 꼬리표, 하트, 정보 줄, 섹션 상자, 병원 카드 등) | `lib/ui/tokens.dart`, `theme.dart`, `icons.dart`, `widgets.dart`, `format.dart` | 디자인 민트 #4bae93 에 흰 글씨는 2.7:1 이라 글씨·체크가 있는 곳은 #2d836d(4.6:1)를 쓰고, #4bae93 은 진행 막대 같은 장식에만 쓴다. 흐린 글씨(#8a938f)도 4.5:1 로 맞췄다. 계산은 이번 세션에서 모든 조합을 확인했다. |
-| **글꼴**: Pretendard (PretendardStd 1.3.9, 흔한 한글 2,350자, 5가지 굵기, 1.5MB) | `assets/fonts/`, 라이선스 `assets/fonts/OFL.txt` (설정 '오픈소스 라이선스'에 나옴, `main.dart` `_registerFontLicense`) | GitHub `orioncactus/pretendard` v1.3.9 에서 받아 git 해시를 확인했다. 드문 글자는 휴대폰 글꼴로 보인다. |
+| **글꼴**: Pretendard 1.3.9 공식 서브셋 (한글 2,780자, 5가지 굵기, TTF 3.7MB) | `assets/fonts/Pretendard-*.subset.ttf`, 라이선스 `assets/fonts/OFL.txt` (설정 '오픈소스 라이선스'에 나옴, `main.dart` `_registerFontLicense`) | **2026-10-30 오후에 바로잡음**: 처음 넣은 `PretendardStd` 는 한글이 하나도 없는 판이어서 앱의 한글이 휴대폰 글꼴로 보였다. 저장소의 `web/static/woff-subset/` WOFF 를 받아 git 해시를 확인하고 표 데이터는 그대로 TTF 로 풀었다(OFL 의 예약 이름 'Pretendard' 를 지키려고 직접 줄이지 않았다). 드문 글자는 휴대폰 글꼴로 보인다. |
 | **로고**: 디자인의 '메디움' M 로고 | `assets/brand/logo.svg` (`MediumLogo`) | 디자인의 viewBox 가 '+' 오른쪽 끝을 잘라서 너비를 127 로 넓혔다. 흰색으로 흐려지는 끝은 투명으로 바꿔 다크 모드에서도 자연스럽다. |
 | **앱 아이콘·스플래시**: 흰 바탕에 메디움 로고. 안드로이드 12 이상 스플래시는 앱 아이콘, 11 이하는 가운데 로고 | 원본 `assets/icon/*.png` 와 `res/drawable-xxxhdpi/splash_logo.png` 는 `RENDER_ICONS=1 flutter test test/tools/render_brand_icons_test.dart` 로 그리고 `dart run flutter_launcher_icons` | 보라 아이콘용 `tools/make_icon.py` 는 지웠다. 스플래시 배경은 흰색(다크 #0F1513), 바로가기 아이콘은 #2D836D. |
 | **하단 탭 3개**: 홈 / 즐겨찾기 / 마이페이지 | `app_shell.dart` | 병원 찾기는 홈 바로가기로 여는 화면(탭 막대에서는 '홈'이 켜짐). 진료 카드는 홈 바로가기·마이페이지에서 여는 화면. 홈 화면 바로가기 '진료 카드 보여 주기'는 카드가 있으면 보여 주기, 없으면 카드 화면. |

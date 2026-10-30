@@ -85,8 +85,8 @@ storeFile=C:/Users/<사용자>/hamkke-upload.jks
   디자인의 민트(#4bae93)에 흰 글씨는 대비가 2.7:1 이라, 글씨·체크 표시가 있는 곳은 기획서 9장 기준(4.5:1)에 맞게
   조금 진한 #2d836d 를 씁니다. 다크 모드·고대비 색도 `tokens.dart` 에 있습니다. 스플래시 배경은
   `res/values(-night)/colors.xml` 의 `splash_background`, 바로가기 아이콘 색은 `res/drawable/ic_shortcut_*.xml` 입니다.
-- 글꼴은 Pretendard(흔히 쓰는 한글 2,350자 판 PretendardStd 1.3.9, SIL OFL 1.1, `assets/fonts/`)입니다. 라이선스는 설정의
-  ‘오픈소스 라이선스’에 나옵니다.
+- 글꼴은 Pretendard 1.3.9 공식 서브셋(한글 2,780자와 영문·기호, SIL OFL 1.1, `assets/fonts/`)입니다. 서브셋에 없는 드문 한글은
+  휴대폰 글꼴로 보입니다. 라이선스는 설정의 ‘오픈소스 라이선스’에 나옵니다.
 - 홈 화면에서 앱 아이콘을 길게 누르면 '병원 찾기', '진료 카드 보여 주기', '즐겨찾기' 바로가기가 나옵니다
   (`quick_actions`, `lib/main.dart` 의 `_setUpShortcuts`, 아이콘은 `res/drawable/ic_shortcut_*.xml`).
   바로가기 아이콘은 이름으로 찾는 리소스라 릴리스 빌드의 리소스 축소에서 지워지지 않게 `res/raw/keep.xml` 에 적어 둡니다.
