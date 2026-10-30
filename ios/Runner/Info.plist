@@ -15,7 +15,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>가까운 병원을 찾기 위해 현재 위치를 사용해요. 위치는 휴대폰 안에서만 쓰고 어디에도 보내지 않아요.</string>
 	<key>CFBundleDisplayName</key>
-	<string>함께병원</string>
+	<string>메디움</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

@@ -1,11 +1,11 @@
-# 함께병원 인수인계 노트
+# 메디움(옛 함께병원) 인수인계 노트
 
-2026-10-27 작성. 다른 계정(새 Claude 세션)에서 이어서 작업할 때 이 파일부터 읽으세요.
+2026-10-27 작성, 2026-10-30 메디움 디자인 적용까지 갱신. 다른 계정(새 Claude 세션)에서 이어서 작업할 때 이 파일부터 읽으세요.
 
 ## 1. 지금 상태 한눈에
 
 - **하던 일**: 기획서(`C:\Users\minyj\OneDrive\문서\카카오톡 받은 파일\기획서.md`, v1.0, 2026-10-24)대로 앱을 MVP 수준으로 고치는 중. 2026-10-27 두 번째 세션에서 3장의 1~4번(APK 크기, 에뮬레이터 점검, 추천 시나리오 테스트, 접근성 자동 점검)을 끝내고 그 과정에서 찾은 결함 6개를 고쳤다 ([3-1장](#3-1-2026-10-27-두-번째-세션에서-고친-것)).
-- **코드**: 기획서 P0 과 P1 대부분을 구현했다. `flutter analyze` 문제 없음, Flutter 테스트 **165개**와 Python 테스트 **20개**가 통과한다. 2026-10-29 에는 배포 준비(앱 아이콘·스플래시·홈 화면 바로가기·릴리스 서명 설정)를 더했다 ([3-2장](#3-2-2026-10-29-배포-준비-앱처럼-보이게)).
+- **코드**: 기획서 P0 과 P1 대부분을 구현했다. `flutter analyze` 문제 없음, Flutter 테스트 **173개**(아이콘 그리기 1개는 평소 건너뜀)와 Python 테스트 **20개**가 통과한다. 2026-10-29 에는 배포 준비(앱 아이콘·스플래시·홈 화면 바로가기·릴리스 서명 설정)를 더했고 ([3-2장](#3-2-2026-10-29-배포-준비-앱처럼-보이게)), **2026-10-30 에는 사용자가 준 '메디움' 디자인을 앱 전체에 적용했다** ([3-3장](#3-3-2026-10-30-메디움-디자인-적용)).
 - **아직 안 한 것**: 푸시, 데이터 배포, 네이버 지도 키·지도 화면 확인, 실기기(지문·TalkBack 실제 청취) 확인, 그리고 사용자가 정할 것 3가지([2-1장](#2-1-사용자와-상의할-것)). 자세한 순서는 [3장](#3-바로-이어서-할-일-순서대로)에 있다. README 는 새 기능과 ABI 별 빌드에 맞게 고쳐 두었다.
 - **Git**:
   - 저장소는 `github.com/minyj07/hamkke-hospital` 의 `main` 이다. `1d58a50` 이 1단계(이름 검색·즐겨찾기 등), `03dfb48` 이 2단계(기획서 MVP)다.
@@ -26,13 +26,16 @@
 | 상태 관리 | Riverpod 를 쓰지 않고 기존 방식(ChangeNotifier + `AppScope` InheritedWidget)을 유지한다. | `lib/screens/app_scope.dart` |
 | 익명 사용 통계 (미결 5) | 넣지 않았다. 아직 정하지 않음. | — |
 | 앱 언어 | 한국어만. Material 기본 라벨(뒤로 가기 '뒤로', 라이선스 화면 등)도 휴대폰 언어와 상관없이 한국어다. | `lib/main.dart` 의 `locale`, `localizationsDelegates` |
-| 앱 기본 색 | **보라 #5B3FA0** (2026-10-29, 후보 6개 그림 중 D). 처음 초록(#1B6E5A)에서 바꿨다. 테마·아이콘·스플래시·바로가기 아이콘·홈 로고가 모두 이 색이다. | `lib/main.dart` 의 `_seed`, 바꾸는 법은 [3-2장](#3-2-2026-10-29-배포-준비-앱처럼-보이게) 아이콘 행 |
+| 앱 이름 | **메디움** (2026-10-30, 디자인을 따라). 화면·안드로이드·iOS 이름, 잠금 안내, 메일 제목, 공유 글이 모두 메디움이다. 저장소·패키지 이름(`hamkke-hospital`, `kr.hamkkehospital.app`)은 그대로다. | `lib/ui/tokens.dart` 의 `appName`, `AndroidManifest.xml`, `ios/Runner/Info.plist` |
+| 앱 디자인 | **메디움 디자인** (2026-10-30, 사용자가 준 Claude Design 묶음 `Medium Home.dc.html`). 민트·짙은 초록, Pretendard 글꼴, 하단 탭 3개(홈·즐겨찾기·마이페이지). 보라(#5B3FA0, 10-29)는 이 디자인으로 대체했다. | `lib/ui/` ([3-3장](#3-3-2026-10-30-메디움-디자인-적용)) |
+| 병원 찾기 단계 | 디자인의 단계(진료과·필요한 도움·소통 방법·거리)가 아니라 **지금 단계(장애→정도→진료 목적→나이→편의시설→지역) 그대로, 모양만 디자인**. 진료 목적별 지정 기관 찾기와 시·도 고르기를 지키려는 것. | `lib/screens/find_screen.dart` |
+| 다크 모드 | **휴대폰 설정을 따른다**. 디자인에는 밝은 화면만 있어 같은 원칙으로 어두운 색을 만들었다. | `MediumColors.dark` |
 
 ## 2-1. 사용자와 상의할 것
 
 아직 정하지 않았고, 정하면 코드를 바꿔야 하는 것. 테스트는 지금 동작대로 적어 두었다.
 
-1. **지도 SDK 유지 여부**: 네이버 지도 SDK 가 ABI 하나당 약 25MB 다. arm64 APK 는 47.5MB 로 50MB 안에 들지만, 빼면 약 22MB 가 된다. 키를 받아 지도 화면을 쓸지, 지도 앱으로 넘기는 '지도에서 보기'만 둘지 정한다.
+1. **지도 SDK 유지 여부** (홈의 '지도에서 찾기'는 SDK 없이 네이버 지도 앱을 연다): 네이버 지도 SDK 가 ABI 하나당 약 25MB 다. arm64 APK 는 47.5MB 로 50MB 안에 들지만, 빼면 약 22MB 가 된다. 키를 받아 지도 화면을 쓸지, 지도 앱으로 넘기는 '지도에서 보기'만 둘지 정한다.
 2. **국립 정신건강 전문기관의 거리 감점**: `InstitutionCategory.mentalHealthCenter` 가 `recommender.dart` 의 `_regionalCategories` 에 없어 동네 병원처럼 1km 에 2점씩 깎인다. 전국에 몇 곳 없는 기관이라 40km 떨어지면 동네 정신건강의학과 의원보다 뒤로 간다 (시나리오 '지적장애(심함) 마음 건강'). 권역 기관(0.2/km, 최대 30)으로 바꿀지 정한다.
 3. **건강검진에서 찾는 진료과**: `CareNeed.checkup` 은 가정의학과만 찾아서, 내과만 있는 병원은 장애친화 검진기관이 아니면 결과에서 빠진다 (시나리오 '심장장애 건강검진'). 실제로 내과 의원이 국가검진을 많이 하므로 내과를 더할지 정한다.
 4. **글자 200%·좁은 화면(360dp)에서 실제 글꼴로 잘릴 수 있는 문구 3곳** (접근성 테스트의 계산, 문구를 바꿔야 해서 그대로 둠): 카드 편집의 칩 '조용한 곳에서 기다리기', 결과 거르기 칩 '편의시설 정보 있는 곳만'(경계선), 카드 편집의 입력 칸 라벨 '이름 또는 불러 주었으면 하는 이름'(줄임표). 짧은 문구로 바꿀지 정한다.
@@ -56,8 +59,8 @@
 
 | 결함 | 고친 곳 | 검사하는 테스트 |
 |---|---|---|
-| 즐겨찾기·최근 본 병원을 앱을 켤 때 읽지 않아, 다음에 켰을 때 목록을 바꾸기 전까지 즐겨찾기 탭이 비어 보이고 병원 정보의 버튼도 '넣기'로 보였다 (`SavedHospitals._ready` 가 지연 초기화) | `app_shell.dart` 의 `initState` 에서 `favorites.load()`·`recent.load()` | `widget_test.dart` '앱을 다시 켜면 저장해 둔 즐겨찾기…' |
-| 앱 바의 뒤로 가기 버튼이 화면낭독기에 영어 `Back` 으로 읽혔다 (Material 한국어 번역 없음) | `pubspec.yaml` 에 `flutter_localizations`, `main.dart` 에 `locale: ko` + `GlobalMaterialLocalizations.delegates` | `widget_test.dart` '앱 바의 뒤로 가기 버튼은 … 한국어로 읽힌다' |
+| 즐겨찾기·최근 본 병원을 앱을 켤 때 읽지 않아, 다음에 켰을 때 목록을 바꾸기 전까지 즐겨찾기 탭이 비어 보이고 병원 정보의 버튼도 '넣기'로 보였다 (`SavedHospitals._ready` 가 지연 초기화) | `app_shell.dart` 의 `initState` 에서 `favorites.load()`·`recent.load()` | `home_test.dart` '앱을 다시 켜면 저장해 둔 즐겨찾기…' |
+| 앱 바의 뒤로 가기 버튼이 화면낭독기에 영어 `Back` 으로 읽혔다 (Material 한국어 번역 없음) | `pubspec.yaml` 에 `flutter_localizations`, `main.dart` 에 `locale: ko` + `GlobalMaterialLocalizations.delegates` | `home_test.dart` '앱 바의 뒤로 가기 버튼은 … 한국어로 읽힌다' |
 | 테마의 `visualDensity: comfortable` 이 실제로는 -4dp 라 버튼·칩의 터치 영역이 44dp 였다 | `main.dart` → `VisualDensity.standard` | `accessibility_test.dart` 의 `androidTapTargetGuideline` |
 | 결과 화면의 '순서·거르기·거리' 제목이 칩과 떨어져 한 노드(`순서\n거르기\n거리`)로 읽혔다 | `results_screen.dart` `_Controls.group()` 제목을 `Semantics(container, header)` 로 | `accessibility_test.dart` (제목이 별도 헤더 노드인지) |
 | 설정 '내 정보 전부 지우기' 대화상자가 글자 2배·640dp 에서 본문이 잘렸다 | `settings_screen.dart` 대화상자 `scrollable: true` | `accessibility_test.dart` |
@@ -71,12 +74,33 @@
 
 | 한 것 | 어디 | 비고 |
 |---|---|---|
-| **앱 아이콘**: 보라(#5B3FA0, 사용자가 고른 색) 바탕에 흰 십자, 가운데 하트. 안드로이드 적응형(원·둥근 네모 마스크 대응)·단색(테마 아이콘)·iOS 아이콘 | 원본 `assets/icon/` (앱에 넣지 않음)은 `python tools/make_icon.py assets/icon 5B3FA0` 으로 그리고(Pillow 필요), 런처 아이콘은 `dart run flutter_launcher_icons` 로 만든다 (pubspec 의 `flutter_launcher_icons` 설정) | 적응형 앞면은 생성기가 16% 안쪽으로 넣으므로 스크립트가 1/0.68 배로 크게 그린다. **색을 바꿀 때 함께 바꿀 곳**: `lib/main.dart` `_seed`, pubspec `adaptive_icon_background`, `res/values(-night)/colors.xml` 의 `splash_background`, `res/drawable/ic_shortcut_*.xml` 의 `fillColor`, 아이콘 생성 명령의 색 인자. 앱 안 로고(`lib/screens/logo.dart` `LogoMark`, 홈 앱 바)는 테마 색을 따라 저절로 바뀐다. |
+| **앱 아이콘** (2026-10-30 에 메디움 로고로 바뀜, [3-3장](#3-3-2026-10-30-메디움-디자인-적용)): 안드로이드 적응형(원·둥근 네모 마스크 대응)·단색(테마 아이콘)·iOS 아이콘 | 원본 `assets/icon/` (앱에 넣지 않음), 런처 아이콘은 `dart run flutter_launcher_icons` (pubspec 의 `flutter_launcher_icons` 설정) | 10-29 의 보라 십자 아이콘과 그 스크립트(`tools/make_icon.py`)는 10-30 에 메디움 로고와 `test/tools/render_brand_icons_test.dart` 로 대체했다. 색은 `lib/ui/tokens.dart` 에 모여 있다. |
 | **스플래시**: 연한 초록 배경(다크 모드는 짙은 초록) + 안드로이드 12 이상은 시스템 스플래시에 앱 아이콘 | `res/values(-night)/colors.xml` 의 `splash_background`, `res/values(-night)-v31/styles.xml`, `drawable(-v21)/launch_background.xml` | iOS 는 아직 기본 흰 LaunchScreen 이다. |
-| **홈 화면 바로가기** (아이콘 길게 누르기): 병원 찾기 / 진료 카드 보여 주기(카드가 있으면 바로 보여 주기 화면, 없으면 카드 탭) / 즐겨찾기 | `quick_actions` 1.1.1, `lib/main.dart` `_setUpShortcuts`, `AppShortcut` enum 과 `AppServices.shortcut`(`app_scope.dart`), 받아서 여는 곳은 `app_shell.dart` `_openShortcut`, 아이콘 `res/drawable/ic_shortcut_*.xml` | 앱이 꺼진 채로 누르면 탭 화면이 생기기 전에 들어오므로 값으로 들고 있다가 첫 프레임 뒤에 연다. 테스트 3개(`widget_test.dart` '홈 화면 바로가기'). 잠겨 있으면 잠금 화면 아래에서 열려 있다가 풀면 보인다. 바로가기 아이콘 drawable 은 코드가 이름으로만 찾아서 릴리스 빌드의 리소스 축소가 지워 버린다(그러면 메뉴에 빈 흰 원만 보이고 `dumpsys shortcut` 에 `iconRes=0`). `res/raw/keep.xml` 의 `tools:keep` 으로 지킨다. 새 바로가기 아이콘을 더하면 거기에도 적는다. 에뮬레이터에서 시험할 때는 `adb shell "am start -n kr.hamkkehospital.app/.MainActivity -a android.intent.action.RUN --es 'some unique action key' card"` 처럼 따옴표를 기기 셸까지 전달해야 한다. |
+| **홈 화면 바로가기** (아이콘 길게 누르기): 병원 찾기 / 진료 카드 보여 주기(카드가 있으면 바로 보여 주기 화면, 없으면 카드 탭) / 즐겨찾기 | `quick_actions` 1.1.1, `lib/main.dart` `_setUpShortcuts`, `AppShortcut` enum 과 `AppServices.shortcut`(`app_scope.dart`), 받아서 여는 곳은 `app_shell.dart` `_openShortcut`, 아이콘 `res/drawable/ic_shortcut_*.xml` | 앱이 꺼진 채로 누르면 탭 화면이 생기기 전에 들어오므로 값으로 들고 있다가 첫 프레임 뒤에 연다. 테스트 3개(`home_test.dart` '홈 화면 바로가기'). 잠겨 있으면 잠금 화면 아래에서 열려 있다가 풀면 보인다. 바로가기 아이콘 drawable 은 코드가 이름으로만 찾아서 릴리스 빌드의 리소스 축소가 지워 버린다(그러면 메뉴에 빈 흰 원만 보이고 `dumpsys shortcut` 에 `iconRes=0`). `res/raw/keep.xml` 의 `tools:keep` 으로 지킨다. 새 바로가기 아이콘을 더하면 거기에도 적는다. 에뮬레이터에서 시험할 때는 `adb shell "am start -n kr.hamkkehospital.app/.MainActivity -a android.intent.action.RUN --es 'some unique action key' card"` 처럼 따옴표를 기기 셸까지 전달해야 한다. |
 | **릴리스 서명**: `android/key.properties` 가 있으면 그 키, 없으면 디버그 키 | `android/app/build.gradle.kts` | **키는 사용자가 만든다** (README '스토어에 올리기 전: 서명 키'). 키를 만들기 전까지 릴리스 APK/AAB 는 디버그 서명이라 스토어에 못 올린다. |
 
 **아직 안 한 것 / 사용자 몫**: 서명 키 생성(README), 스토어 등록 정보(스크린샷, 설명, 개인정보 처리방침 **URL** — 앱 안의 처리방침 글을 GitHub Pages 나 저장소 파일로 올려야 한다), iOS 스플래시·빌드 확인(맥 필요), 홈 화면 **위젯**(진료 카드 한 장짜리)은 네이티브 코드가 필요해 넣지 않았다.
+
+## 3-3. 2026-10-30 메디움 디자인 적용
+
+사용자가 'Claude Design' 에서 만든 묶음(`Downloads/메디움 홈 화면 구현-handoff/untitled/project/Medium Home.dc.html`, 휴대폰 화면 사진 3장)을 주며 "이 디자인을 적용해 줘"라고 했다. 정한 것은 2장(앱 이름·디자인·찾기 단계·다크 모드·글꼴).
+
+| 한 것 | 어디 | 비고 |
+|---|---|---|
+| **디자인 시스템**: 색 토큰(밝게·어둡게·고대비 2가지), 테마(버튼·칩·입력 칸·앱 바·스낵바·하단 탭), 디자인 선 아이콘, 공통 부품(선택 줄, 진행 막대, 꼬리표, 하트, 정보 줄, 섹션 상자, 병원 카드 등) | `lib/ui/tokens.dart`, `theme.dart`, `icons.dart`, `widgets.dart`, `format.dart` | 디자인 민트 #4bae93 에 흰 글씨는 2.7:1 이라 글씨·체크가 있는 곳은 #2d836d(4.6:1)를 쓰고, #4bae93 은 진행 막대 같은 장식에만 쓴다. 흐린 글씨(#8a938f)도 4.5:1 로 맞췄다. 계산은 이번 세션에서 모든 조합을 확인했다. |
+| **글꼴**: Pretendard (PretendardStd 1.3.9, 흔한 한글 2,350자, 5가지 굵기, 1.5MB) | `assets/fonts/`, 라이선스 `assets/fonts/OFL.txt` (설정 '오픈소스 라이선스'에 나옴, `main.dart` `_registerFontLicense`) | GitHub `orioncactus/pretendard` v1.3.9 에서 받아 git 해시를 확인했다. 드문 글자는 휴대폰 글꼴로 보인다. |
+| **로고**: 디자인의 '메디움' M 로고 | `assets/brand/logo.svg` (`MediumLogo`) | 디자인의 viewBox 가 '+' 오른쪽 끝을 잘라서 너비를 127 로 넓혔다. 흰색으로 흐려지는 끝은 투명으로 바꿔 다크 모드에서도 자연스럽다. |
+| **앱 아이콘·스플래시**: 흰 바탕에 메디움 로고. 안드로이드 12 이상 스플래시는 앱 아이콘, 11 이하는 가운데 로고 | 원본 `assets/icon/*.png` 와 `res/drawable-xxxhdpi/splash_logo.png` 는 `RENDER_ICONS=1 flutter test test/tools/render_brand_icons_test.dart` 로 그리고 `dart run flutter_launcher_icons` | 보라 아이콘용 `tools/make_icon.py` 는 지웠다. 스플래시 배경은 흰색(다크 #0F1513), 바로가기 아이콘은 #2D836D. |
+| **하단 탭 3개**: 홈 / 즐겨찾기 / 마이페이지 | `app_shell.dart` | 병원 찾기는 홈 바로가기로 여는 화면(탭 막대에서는 '홈'이 켜짐). 진료 카드는 홈 바로가기·마이페이지에서 여는 화면. 홈 화면 바로가기 '진료 카드 보여 주기'는 카드가 있으면 보여 주기, 없으면 카드 화면. |
+| **홈**: 로고·큰 제목, 지난번 조건 링크(화면낭독기는 조건도 읽음), 검색창(이름·진료과·지역, 결과가 바로 아래, 하트로 즐겨찾기), 바로가기 4개, 내 주변 병원, 자주 찾는 진료과 | `home_screen.dart` | '병원 이름으로 찾기' 화면(`search_screen.dart`)은 홈 검색창이 대신해 지웠다. **내 주변 병원**은 '현재 위치로 보기'를 누를 때만 위치를 묻고(저장 안 함), 지난번 조건에 지역이 있으면 위치 없이 그 지역 기준으로 보여 준다. 진료과 버튼은 내 주변 병원을 그 과로 거른다(디자인과 같음). '지도에서 찾기'는 네이버 지도에서 '병원'을 찾는다. 글자를 1.3배 넘게 키우면 4칸 줄이 2칸으로 바뀐다. |
+| **마이페이지**: 진료 카드 요약(이름·꼬리표·병원에 보여 주기/만들기), 자주 쓰는 문장, 설정 | `my_page_screen.dart` | 설정은 홈 오른쪽 위에서 여기로 옮겼다. |
+| **병원 찾기·결과·병원 정보·진료 카드·즐겨찾기·설정·잠금·안내** | 각 화면 파일 | 문구와 동작은 그대로. 결과 카드와 병원 정보에 하트(즐겨찾기)를 더했다. 찾기의 '이전' 버튼은 앱 바 화살표(툴팁 '이전 단계'/'홈으로')가 대신한다. |
+
+**테스트**: `widget_test.dart` 를 `home_test.dart`·`find_results_test.dart`·`detail_test.dart` 로 나눴다. 도우미는 `fakes.dart` 의 `openFind`·`openCard`·`openSettings`·`searchAgain`·`searchGangnam`·`scrollTo`. `tapAndSettle` 은 아래에 없으면 위로도 찾는다(홈은 다른 화면에 다녀와도 굴린 자리가 남는다). 접근성 테스트는 홈 검색·내 주변 병원·마이페이지까지 글자 1배·2배로 본다. 홈의 내 주변 병원은 지난번 지역이 있으면 앱을 켤 때 `loadRegions`·`loadHospitals` 를 한 번씩 부르니 `FlakyRepository` 실패 횟수를 셀 때 넣는다.
+
+**에뮬레이터 확인 (2026-10-30)**: 밝은·다크 모드에서 안내→홈→병원 찾기 6단계→결과→병원 정보(즐겨찾기 넣기)→즐겨찾기→마이페이지→진료 카드 만들기 모두 디자인대로 나왔다. 에뮬레이터는 Google '위치 정확도' 동의 창이 뜨고, 거절하면 '현재 위치를 알 수 없어요' 안내가 나온다(앱 결함 아님). 실기기에서 내 주변 병원을 한 번 확인한다.
+
+**APK 크기**: arm64 **49.3MB** (글꼴 1.5MB·SVG 렌더러가 더해짐). 기획서 목표 50MB 에 거의 닿았으니 무엇을 더하면 지도 SDK 유지 여부(2-1장)를 같이 정한다.
 
 ## 4. 기획서 대비 구현 현황
 

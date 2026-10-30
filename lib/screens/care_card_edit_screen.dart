@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/care_card.dart';
 import '../models/disability.dart';
+import '../ui/tokens.dart';
+import '../ui/widgets.dart';
 import 'app_scope.dart';
 
 /// 진료 카드 만들기·고치기. 모든 칸은 비워 둘 수 있다.
@@ -116,20 +118,28 @@ class _CareCardEditScreenState extends State<CareCardEditScreen> {
     messenger.showSnackBar(const SnackBar(content: Text('진료 카드를 지웠어요.')));
   }
 
-  Widget _heading(String text, [String? note]) => Padding(
-        padding: const EdgeInsets.only(top: 24, bottom: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Semantics(
-              header: true,
-              child: Text(text, style: Theme.of(context).textTheme.titleMedium),
-            ),
-            if (note != null) Text(note, style: Theme.of(context).textTheme.bodySmall),
+  /// 섹션 제목(디자인: 17/800)과 설명(13, 회색). 섹션 사이는 30, 제목과 내용 사이는 12.
+  Widget _heading(String text, [String? note]) {
+    final c = MediumColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 30, bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Semantics(
+            header: true,
+            child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+          ),
+          if (note != null) ...[
+            const SizedBox(height: 6),
+            Text(note, style: TextStyle(fontSize: 13, height: 1.5, color: c.textSecondary)),
           ],
-        ),
-      );
+        ],
+      ),
+    );
+  }
 
+  /// 입력 칸 (디자인: 둥근 14, 높이 56, 여러 줄은 3줄). 라벨 글은 화면낭독기와 테스트가 찾는다.
   Widget _field(
     TextEditingController controller,
     String label, {
@@ -138,22 +148,24 @@ class _CareCardEditScreenState extends State<CareCardEditScreen> {
     TextInputType? keyboard,
   }) =>
       Padding(
-        padding: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(bottom: 6),
         child: TextField(
           controller: controller,
           minLines: lines,
           maxLines: lines == 1 ? 1 : lines + 3,
           maxLength: lines == 1 ? 40 : 300,
           keyboardType: keyboard ?? (lines == 1 ? TextInputType.text : TextInputType.multiline),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, height: 1.5, color: MediumColors.of(context).text),
           decoration: InputDecoration(
             labelText: label,
             hintText: hint,
-            border: const OutlineInputBorder(),
+            alignLabelWithHint: lines > 1,
           ),
           onChanged: (_) => _dirty ? null : _changed(),
         ),
       );
 
+  /// 고르는 칩 (디자인: 높이 40, 둥근 12, 고르면 연한 초록 바탕·초록 테두리·체크).
   Widget _chips<T>(List<T> values, Set<T> selected, String Function(T) label) => Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -169,7 +181,7 @@ class _CareCardEditScreenState extends State<CareCardEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     return PopScope(
       canPop: !_dirty,
       onPopInvokedWithResult: (didPop, _) async {
@@ -185,18 +197,21 @@ class _CareCardEditScreenState extends State<CareCardEditScreen> {
           title: Text(_isNew ? '진료 카드 만들기' : '진료 카드 고치기'),
           actions: [
             TextButton(
-              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48), foregroundColor: c.link),
               onPressed: _save,
               child: const Text('저장'),
             ),
+            const SizedBox(width: 4),
           ],
         ),
         body: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            Text('모든 칸은 비워 둬도 돼요. 이 휴대폰의 보안 저장소에만 암호화해서 저장해요.',
-                style: theme.textTheme.bodyMedium),
-            const SizedBox(height: 16),
+            Text(
+              '모든 칸은 비워 둬도 돼요. 이 휴대폰의 보안 저장소에만 암호화해서 저장해요.',
+              style: TextStyle(fontSize: 13, height: 1.5, color: c.textSecondary),
+            ),
+            const SizedBox(height: 12),
             _field(_name, '이름 또는 불러 주었으면 하는 이름', hint: '예: 김함께'),
             _heading('장애', '병원 찾기에서도 이 장애 유형과 정도를 미리 골라 둬요.'),
             _chips(DisabilityType.values, _types, (t) => t.label),
@@ -205,17 +220,18 @@ class _CareCardEditScreenState extends State<CareCardEditScreen> {
               _field(_otherDisability, '기타 장애', hint: '예: 척수장애'),
             ],
             const SizedBox(height: 8),
-            RadioGroup<Severity?>(
-              groupValue: _severity,
-              onChanged: (v) => _changed(() => _severity = v),
-              child: Column(
-                children: [
-                  for (final s in Severity.values)
-                    RadioListTile<Severity?>(value: s, title: Text(s.label)),
-                  const RadioListTile<Severity?>(value: null, title: Text('적지 않을래요')),
-                ],
+            for (final (value, label) in [
+              for (final s in Severity.values) (s, s.label),
+              (null, '적지 않을래요'),
+            ])
+              OptionTile(
+                label: label,
+                selected: _severity == value,
+                style: OptionStyle.radio,
+                leadingIndicator: true,
+                divider: false,
+                onTap: () => _changed(() => _severity = value),
               ),
-            ),
             _heading('소통 방법', '의료진에게 바라는 방법을 모두 고르세요.'),
             _chips(Communication.values, _communication, (c) => c.label),
             const SizedBox(height: 12),
@@ -225,16 +241,17 @@ class _CareCardEditScreenState extends State<CareCardEditScreen> {
             const SizedBox(height: 12),
             _field(_otherHelp, '그 밖에 필요한 도움', hint: '예: 엘리베이터까지 안내해 주세요.'),
             _heading('주의할 점'),
-            _field(_cautions, '주의할 점', hint: '예: 큰 소리에 놀라요. 주사를 무서워해요.', lines: 2),
+            _field(_cautions, '주의할 점', hint: '예: 큰 소리에 놀라요. 주사를 무서워해요.', lines: 3),
             _heading('앓고 있는 병·먹는 약'),
-            _field(_conditions, '앓고 있는 병·먹는 약', hint: '예: 고혈압, 혈압약 하루 1번', lines: 2),
+            _field(_conditions, '앓고 있는 병·먹는 약', hint: '예: 고혈압, 혈압약 하루 1번', lines: 3),
             _heading('알레르기'),
             _field(_allergies, '알레르기', hint: '예: 페니실린'),
             _heading('보호자 연락처'),
             _field(_guardianName, '보호자 이름이나 관계', hint: '예: 엄마'),
+            const SizedBox(height: 6),
             _field(_guardianPhone, '보호자 전화번호',
                 hint: '예: 010-1234-5678', keyboard: TextInputType.phone),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
             FilledButton(
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
               onPressed: _save,
@@ -245,7 +262,7 @@ class _CareCardEditScreenState extends State<CareCardEditScreen> {
               TextButton(
                 style: TextButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
-                  foregroundColor: theme.colorScheme.error,
+                  foregroundColor: c.warning,
                 ),
                 onPressed: _delete,
                 child: const Text('진료 카드 지우기'),

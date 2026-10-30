@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 안드로이드 11 이하의 스플래시. 12 이상은 values-v31/styles.xml 의 시스템 스플래시(앱 아이콘)를 쓴다. -->
+<!-- 안드로이드 11 이하의 스플래시: 바탕색 가운데 메디움 로고(drawable-xxxhdpi/splash_logo.png, 96dp).
+     12 이상은 values(-night)-v31/styles.xml 의 시스템 스플래시(앱 아이콘)를 쓴다. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/splash_background" />
+    <item>
+        <bitmap android:gravity="center" android:src="@drawable/splash_logo" />
+    </item>
 </layer-list>

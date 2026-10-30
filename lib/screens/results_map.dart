@@ -3,6 +3,8 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 import '../data/regions.dart';
 import '../services/recommender.dart';
+import '../ui/format.dart';
+import '../ui/tokens.dart';
 
 /// 추천 결과를 네이버 지도에 목록과 같은 번호로 보여 준다. 아래 카드에서 한 곳씩 넘겨 보고 연다.
 /// 지도는 화면낭독기로 읽을 수 없으므로 같은 내용을 아래 카드로 읽게 하고, 목록 보기가 기본이다.
@@ -130,12 +132,18 @@ class _SelectedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     final h = rec.hospital;
-    final tall = ButtonStyle(minimumSize: WidgetStateProperty.all(const Size(48, 56)));
-    return Material(
-      elevation: 3,
+    final tall = ButtonStyle(minimumSize: WidgetStateProperty.all(const Size(48, 52)));
+    return DecoratedBox(
+      // 지도 위에 올라온 카드 (디자인 톤: 흰 바탕, 위쪽 옅은 선과 그림자).
+      decoration: BoxDecoration(
+        color: c.background,
+        border: Border(top: BorderSide(color: c.divider)),
+        boxShadow: [BoxShadow(color: c.shadow.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, -2))],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -144,14 +152,33 @@ class _SelectedCard extends StatelessWidget {
               liveRegion: true,
               child: Text('$rank / $total. ${h.name}', style: theme.textTheme.titleMedium),
             ),
-            Text([
-              if (h.kind.isNotEmpty) h.kind,
-              '약 ${rec.distanceKm.toStringAsFixed(1)}km',
-              if (rec.reasons.isNotEmpty) rec.reasons.first,
-            ].join(' · ')),
+            const SizedBox(height: 3),
+            Text(
+              [
+                if (h.kind.isNotEmpty) h.kind,
+                kmLabel(rec.distanceKm),
+                if (rec.reasons.isNotEmpty) rec.reasons.first,
+              ].join(' · '),
+              style: TextStyle(fontSize: 13, height: 1.45, color: c.textSecondary),
+            ),
             if (rec.missing.isNotEmpty)
-              Text('확인 필요 · 없다고 확인됨: ${rec.missing.map((f) => f.label).join(', ')}'),
-            const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.warning_amber_rounded, size: 16, color: c.warning),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '확인 필요 · 없다고 확인됨: ${rec.missing.map((f) => f.label).join(', ')}',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: c.warning),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(

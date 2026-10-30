@@ -303,16 +303,21 @@ Future<void> pumpApp(WidgetTester tester, AppServices services) async {
   await tester.pumpAndSettle();
 }
 
-/// 하단 탭을 누른다. 탭 이름은 홈 버튼·제목에도 있으므로 탭 막대 안에서 찾는다.
+/// 하단 탭(홈·즐겨찾기·마이페이지)을 누른다. 탭 이름은 홈 바로가기·제목에도 있으므로 탭 막대 안에서 찾는다.
 Future<void> tapTab(WidgetTester tester, String label) async {
   await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text(label)));
   await tester.pumpAndSettle();
 }
 
-/// 보이는 목록을 굴려서 [text] 를 찾아 누른다.
+/// 보이는 목록을 굴려서 [text] 를 찾아 누른다. 아래에 없으면 위로도 찾는다
+/// (홈처럼 다른 화면에 다녀와도 굴린 자리가 남는 목록이 있다).
 Future<void> tapAndSettle(WidgetTester tester, String text) async {
-  await tester.scrollUntilVisible(find.text(text), 100,
-      scrollable: find.byType(Scrollable).first);
+  final scrollable = find.byType(Scrollable).first;
+  try {
+    await tester.scrollUntilVisible(find.text(text), 100, scrollable: scrollable);
+  } on StateError {
+    await tester.scrollUntilVisible(find.text(text), -100, scrollable: scrollable);
+  }
   // 굴린 자리를 그린 뒤에 눌러야 하단 탭 막대 같은 다른 것을 누르지 않는다.
   await tester.pumpAndSettle();
   await tester.tap(find.text(text));
@@ -334,7 +339,42 @@ Future<void> tapNext(WidgetTester tester) async {
 bool nextEnabled(WidgetTester tester) =>
     tester.widget<FilledButton>(find.widgetWithText(FilledButton, '다음')).onPressed != null;
 
-/// 병원 찾기 탭에서 장애 유형부터 나이까지 고르고 편의시설 단계를 넘긴다.
+/// 홈의 바로가기로 병원 찾기를 연다 (하단 탭에는 병원 찾기가 없다).
+Future<void> openFind(WidgetTester tester) async {
+  await tapTab(tester, '홈');
+  await tapAndSettle(tester, '병원 찾기');
+}
+
+/// 홈의 바로가기로 나의 진료 카드 화면을 연다.
+Future<void> openCard(WidgetTester tester) async {
+  await tapTab(tester, '홈');
+  await tapAndSettle(tester, '나의 진료 카드');
+}
+
+/// 마이페이지에서 설정을 연다.
+Future<void> openSettings(WidgetTester tester) async {
+  await tapTab(tester, '마이페이지');
+  await tapAndSettle(tester, '설정');
+}
+
+/// 보이는 목록을 [finder] 가 보일 때까지 굴린다.
+Future<void> scrollTo(WidgetTester tester, Finder finder) => tester.scrollUntilVisible(
+    finder, 200, scrollable: find.byType(Scrollable).first);
+
+/// 홈의 '지난번 조건으로 다시 찾기'.
+Future<void> searchAgain(WidgetTester tester) => tapAndSettle(tester, '지난번 조건으로 다시 찾기');
+
+/// 지체장애·재활 치료·성인으로 서울특별시 강남구를 찾는다.
+Future<void> searchGangnam(WidgetTester tester) async {
+  await chooseUntilRegion(tester);
+  await tapAndSettle(tester, '서울특별시');
+  await tapNext(tester);
+  await tapAndSettle(tester, '강남구');
+  await tester.tap(find.text('추천 병원 보기'));
+  await tester.pumpAndSettle();
+}
+
+/// 병원 찾기에서 장애 유형부터 나이까지 고르고 편의시설 단계를 넘긴다.
 Future<void> chooseUntilRegion(
   WidgetTester tester, {
   String type = '지체장애',
@@ -342,7 +382,7 @@ Future<void> chooseUntilRegion(
   String need = '재활 치료',
   String age = '성인',
 }) async {
-  await tapTab(tester, '병원 찾기');
+  await openFind(tester);
   await tapAndSettle(tester, type);
   await tapNext(tester);
   await tapAndSettle(tester, severity);

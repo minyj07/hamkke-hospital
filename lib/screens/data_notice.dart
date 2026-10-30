@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/regions.dart';
+import '../ui/tokens.dart';
 
 /// 병원 정보를 보여 주는 화면마다 붙이는 안내.
 const dataNotice = '공공데이터 기준이라 실제와 다를 수 있어요. 방문 전 전화로 확인하세요.';
@@ -16,13 +17,16 @@ class DataNotice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 24),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline, size: 20, color: theme.colorScheme.onSurfaceVariant),
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Icon(Icons.info_outline, size: 18, color: c.textSecondary),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -32,7 +36,7 @@ class DataNotice extends StatelessWidget {
                 if (info case final info?)
                   '\n${info.generatedAt} 기준 공공데이터 · 자료: ${info.sources.join(', ')}',
               ].join(' '),
-              style: theme.textTheme.bodyMedium,
+              style: TextStyle(fontSize: 13.5, height: 1.55, color: c.textSecondary),
             ),
           ),
         ],

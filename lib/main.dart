@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -20,9 +22,12 @@ import 'screens/lock_gate.dart';
 import 'screens/onboarding_screen.dart';
 import 'services/app_lock.dart';
 import 'services/location.dart';
+import 'ui/theme.dart';
+import 'ui/tokens.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _registerFontLicense();
   final repository = LocalHospitalRepository(DataStore(
     baseUrl: dataBaseUrl.isEmpty ? null : Uri.parse(dataBaseUrl),
   ));
@@ -64,6 +69,16 @@ Future<void> _setUpShortcuts(AppServices services) async {
   } catch (e) {
     debugPrint('홈 화면 바로가기를 만들지 못했어요: $e');
   }
+}
+
+/// 앱에 넣은 Pretendard 글꼴(SIL OFL)의 라이선스를 설정의 '오픈소스 라이선스'에 보여 준다.
+void _registerFontLicense() {
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(
+      const ['Pretendard'],
+      await rootBundle.loadString('assets/fonts/OFL.txt'),
+    );
+  });
 }
 
 /// 지도 키가 있으면 네이버 지도를 쓸 준비를 한다. 쓸 수 있으면 true.
@@ -114,42 +129,30 @@ class HamkkeApp extends StatelessWidget {
 
   final AppServices services;
 
-  /// 앱의 기본 색 (보라). 아이콘(tools/make_icon.py)·스플래시(res/values/colors.xml)·
-  /// 바로가기 아이콘(res/drawable/ic_shortcut_*.xml)도 같은 색을 쓴다. 바꾸면 함께 바꾼다.
-  static const _seed = Color(0xFF5B3FA0);
-
-  /// 넓은 터치 영역을 기본으로 하고, 고대비 모드면 글자와 배경의 대비를 가장 크게 한다.
-  static ThemeData _theme(Brightness brightness, {required bool highContrast}) => ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _seed,
-          brightness: brightness,
-          contrastLevel: highContrast ? 1.0 : 0.5,
-        ),
-        // 기본 밀도를 쓴다. comfortable 은 이름과 달리 더 촘촘해서(-4dp) 버튼·칩의 터치 영역이 44dp 로 줄어든다.
-        visualDensity: VisualDensity.standard,
-        materialTapTargetSize: MaterialTapTargetSize.padded,
-      );
-
   @override
   Widget build(BuildContext context) {
     final settings = services.settings;
+    // 색·글꼴은 lib/ui/theme.dart (메디움 디자인). 고대비 모드면 글씨와 초록을 더 진하게 한다.
+    ThemeData theme(Brightness b, {bool? highContrast}) =>
+        mediumTheme(b, highContrast: highContrast ?? settings.highContrast);
     return AppScope(
       services: services,
       child: ListenableBuilder(
         listenable: settings,
         builder: (context, _) => MaterialApp(
-          title: '함께병원',
+          title: appName,
           debugShowCheckedModeBanner: false,
           // 앱은 한국어만 쓴다. 뒤로 가기 버튼의 '뒤로'처럼 Material 이 넣는 라벨도
           // 휴대폰 언어와 상관없이 한국어로 보이고 읽힌다.
           locale: const Locale('ko'),
           supportedLocales: const [Locale('ko'), Locale('en')],
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
-          theme: _theme(Brightness.light, highContrast: settings.highContrast),
-          darkTheme: _theme(Brightness.dark, highContrast: settings.highContrast),
+          // 휴대폰이 다크 모드면 어두운 색을 쓴다 (디자인은 밝은 화면만 있어 같은 원칙으로 맞췄다).
+          theme: theme(Brightness.light),
+          darkTheme: theme(Brightness.dark),
           // 휴대폰에서 대비 높이기를 켜도 고대비로 보여 준다.
-          highContrastTheme: _theme(Brightness.light, highContrast: true),
-          highContrastDarkTheme: _theme(Brightness.dark, highContrast: true),
+          highContrastTheme: theme(Brightness.light, highContrast: true),
+          highContrastDarkTheme: theme(Brightness.dark, highContrast: true),
           builder: (context, child) {
             // 앱 안에서 글자 크기를 정했으면 휴대폰 설정 대신 쓴다.
             final scale = settings.textScale;

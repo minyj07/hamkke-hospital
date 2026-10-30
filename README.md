@@ -1,15 +1,19 @@
-# 함께병원
+# 메디움
+
+(옛 이름 함께병원. 저장소·패키지 이름은 그대로 `hamkke-hospital` / `kr.hamkkehospital.app` 이다.)
 
 장애 유형·정도와 필요한 진료를 고르면, 정부 지정 기관(재활병원·건강주치의 등)·진료과·편의시설·거리를
 따져 병원을 추천하는 Flutter 앱입니다. 병원 데이터는 앱에 들어 있어 인터넷 없이도 동작하고,
 새 데이터가 올라오면 바뀐 파일만 내려받습니다.
 
-- **홈·하단 탭**: 홈 / 병원 찾기 / 진료 카드 / 즐겨찾기. 처음 켜면 안내 3장(건너뛰기 가능), 설정은 홈 오른쪽 위
-- **조건으로 찾기** (6단계, 진행 표시·이전 버튼): 장애 유형 → 정도 → 필요한 진료 → 나이(어린이·성인) → 필요한 편의시설
+- **홈** (메디움 디자인): 로고, 병원 검색창(이름·진료과·지역, 결과가 바로 아래에), 바로가기 4개(병원 찾기·나의 진료 카드·
+  즐겨찾기·지도에서 찾기), 내 주변 병원(‘현재 위치로 보기’를 누를 때만 위치를 쓰거나 지난번 지역 기준), 자주 찾는 진료과로 거르기,
+  지난번 조건으로 다시 찾기. 처음 켜면 안내 3장(건너뛰기 가능)
+- **하단 탭**: 홈 / 즐겨찾기 / 마이페이지(나의 진료 카드 요약, 자주 쓰는 문장, 설정)
+- **조건으로 찾기** (6단계, 진행 표시, 앱 바 화살표로 이전 단계): 장애 유형 → 정도 → 필요한 진료 → 나이(어린이·성인) → 필요한 편의시설
   → 지역(또는 현재 위치). 지난번 조건과 진료 카드의 장애 정보로 미리 골라 둔다
 - **결과**: 추천순·가까운 순, 지정 기관만·편의시설 정보 있는 곳만·5/10/20km 거르기, 목록/지도(네이버 지도 키가 있을 때),
   없는 편의시설 경고, 결과가 없으면 이웃 시·도까지 넓히기·진료 목적 바꾸기
-- **이름으로 찾기**: 전국 병원을 이름·지역·종별로 바로 검색
 - **병원 정보**: 종별, 주소, 전화, 의사·전문의 수, 개원 연도, 홈페이지, 지정 현황(제도 설명 ‘?’), 진료과목,
   편의시설 있음·없음·정보 없음, 데이터 기준일
 - **바로 하기**: 전화, 길찾기, 지도, 가족에게 공유, 즐겨찾기, 진료 카드 보여 주기, 정보가 틀렸어요(메일 신고)
@@ -66,12 +70,20 @@ storeFile=C:/Users/<사용자>/hamkke-upload.jks
 
 ### 앱 아이콘과 홈 화면 바로가기
 
-- 아이콘 원본은 `assets/icon/` 에 있고(앱에는 넣지 않음), `python tools/make_icon.py assets/icon 5B3FA0`
-  (Pillow 필요)으로 그린 뒤 `dart run flutter_launcher_icons` 로 안드로이드(적응형·테마 아이콘 포함)와 iOS
-  아이콘을 다시 만듭니다. 앱의 기본 색은 `lib/main.dart` 의 `_seed`(보라 #5B3FA0)이고, 바꿀 때는 아이콘 색 인자,
-  pubspec 의 `adaptive_icon_background`, 스플래시 배경(`res/values(-night)/colors.xml` 의 `splash_background`),
-  바로가기 아이콘(`res/drawable/ic_shortcut_*.xml`)도 함께 바꿉니다. 홈 화면 앱 바의 로고(`lib/screens/logo.dart`)는
-  테마 색을 따라갑니다.
+- 앱 아이콘은 흰 바탕에 메디움 로고(`assets/brand/logo.svg`, 디자인에서 옮김)입니다. 원본 PNG(`assets/icon/`, 앱에는 넣지 않음)와
+  안드로이드 11 이하 스플래시 로고(`res/drawable-xxxhdpi/splash_logo.png`)는 앱과 같은 렌더러로 그립니다.
+  로고를 바꾸면 아래 두 명령으로 안드로이드(적응형·테마 아이콘 포함)와 iOS 아이콘을 다시 만듭니다.
+
+  ```bash
+  RENDER_ICONS=1 flutter test test/tools/render_brand_icons_test.dart
+  dart run flutter_launcher_icons
+  ```
+- 색·글꼴은 `lib/ui/`(`tokens.dart` 색, `theme.dart` 테마, `widgets.dart` 공통 부품, `icons.dart` 디자인 아이콘)에 모여 있습니다.
+  디자인의 민트(#4bae93)에 흰 글씨는 대비가 2.7:1 이라, 글씨·체크 표시가 있는 곳은 기획서 9장 기준(4.5:1)에 맞게
+  조금 진한 #2d836d 를 씁니다. 다크 모드·고대비 색도 `tokens.dart` 에 있습니다. 스플래시 배경은
+  `res/values(-night)/colors.xml` 의 `splash_background`, 바로가기 아이콘 색은 `res/drawable/ic_shortcut_*.xml` 입니다.
+- 글꼴은 Pretendard(흔히 쓰는 한글 2,350자 판 PretendardStd 1.3.9, SIL OFL 1.1, `assets/fonts/`)입니다. 라이선스는 설정의
+  ‘오픈소스 라이선스’에 나옵니다.
 - 홈 화면에서 앱 아이콘을 길게 누르면 '병원 찾기', '진료 카드 보여 주기', '즐겨찾기' 바로가기가 나옵니다
   (`quick_actions`, `lib/main.dart` 의 `_setUpShortcuts`, 아이콘은 `res/drawable/ic_shortcut_*.xml`).
   바로가기 아이콘은 이름으로 찾는 리소스라 릴리스 빌드의 리소스 축소에서 지워지지 않게 `res/raw/keep.xml` 에 적어 둡니다.
@@ -88,7 +100,8 @@ iOS 는 이 기기에서만 읽는 키체인), 내려받은 병원 데이터(`ho
 
 | 경로 | 내용 |
 |---|---|
-| `lib/screens/` | 하단 탭(`app_shell.dart`), 홈, 병원 찾기(`find_screen.dart`), 결과·지도, 병원 상세, 진료 카드, 즐겨찾기, 설정, 앱 잠금 |
+| `lib/screens/` | 하단 탭(`app_shell.dart`), 홈(`home_screen.dart`), 병원 찾기(`find_screen.dart`), 결과·지도, 병원 상세, 진료 카드, 즐겨찾기, 마이페이지(`my_page_screen.dart`), 설정, 앱 잠금 |
+| `lib/ui/` | 메디움 디자인: 색(`tokens.dart`), 테마·글꼴(`theme.dart`), 공통 부품(`widgets.dart`), 디자인 아이콘·로고(`icons.dart`) |
 | `lib/screens/app_scope.dart` | 화면들이 함께 쓰는 저장소·기기 기능(`AppServices`) |
 | `lib/services/recommender.dart` | 사용자 조건을 요구사항으로 바꾸고 병원마다 점수를 매긴다 |
 | `data/scoring.json` | 추천 점수표. 데이터와 함께 배포해서 앱을 업데이트하지 않고 고친다 (`lib/services/score_weights.dart` 의 기본값과 이름이 같아야 한다) |

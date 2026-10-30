@@ -15,19 +15,23 @@ const card = CareCard(
   guardianPhone: '010-1234-5678',
 );
 
-void main() {
-  Future<void> openSettings(WidgetTester tester) async {
-    await tapTab(tester, '홈');
-    await tester.tap(find.byTooltip('설정'));
-    await tester.pumpAndSettle();
-  }
+/// 홈의 큰 제목. 홈 화면이 보이는지 확인할 때 쓴다.
+const homeTitle = '나에게 맞는\n병원을 찾아보세요';
 
+/// 홈 탭으로 가서 목록을 맨 위로 올린다. 홈의 스크롤 위치는 다른 화면에 다녀와도 그대로 남는다.
+Future<void> homeToTop(WidgetTester tester) async {
+  await tapTab(tester, '홈');
+  await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+  await tester.pumpAndSettle();
+}
+
+void main() {
   group('나의 진료 카드', () {
-    testWidgets('만들어 저장하면 탭에 보이고, 병원에 보여 주는 동안 화면을 켜 둔다', (tester) async {
+    testWidgets('만들어 저장하면 카드 화면에 보이고, 병원에 보여 주는 동안 화면을 켜 둔다', (tester) async {
       final store = FakeCareCardStore();
       final screenOn = <bool>[];
       await pumpApp(tester, await makeServices(careCardStore: store, screenOn: screenOn));
-      await tapTab(tester, '진료 카드');
+      await openCard(tester);
       await tapAndSettle(tester, '진료 카드 만들기');
 
       await tester.enterText(find.widgetWithText(TextField, '이름 또는 불러 주었으면 하는 이름'), '이지현');
@@ -55,7 +59,7 @@ void main() {
 
     testWidgets('자주 쓰는 문장을 누르면 크게 보여 준다', (tester) async {
       await pumpApp(tester, await makeServices());
-      await tapTab(tester, '진료 카드');
+      await openCard(tester);
       await tapAndSettle(tester, '자주 쓰는 문장');
       await tapAndSettle(tester, '화장실에 가고 싶어요.');
 
@@ -72,12 +76,14 @@ void main() {
           searchStore: FakeSearchStore(gangnamRehab),
         ),
       );
-      await tapTab(tester, '진료 카드');
+      await openCard(tester);
       await tapAndSettle(tester, '보호자에게 전화 (엄마)');
       expect(opened, ['tel:010-1234-5678']);
 
-      await tapTab(tester, '홈');
-      await tapAndSettle(tester, '지난번 조건으로 다시 찾기');
+      // 진료 카드는 탭이 아니라 홈에서 연 화면이므로 뒤로 가서 홈으로 돌아온다.
+      await goBack(tester);
+      await homeToTop(tester);
+      await searchAgain(tester);
       await tester.tap(find.text('1. 강남재활의학과의원'));
       await tester.pumpAndSettle();
       await tapAndSettle(tester, '진료 카드 보여 주기');
@@ -87,7 +93,7 @@ void main() {
     testWidgets('고치다가 그냥 나가려 하면 한 번 묻는다', (tester) async {
       final store = FakeCareCardStore(card);
       await pumpApp(tester, await makeServices(careCardStore: store));
-      await tapTab(tester, '진료 카드');
+      await openCard(tester);
       await tapAndSettle(tester, '카드 고치기');
       await tester.enterText(find.widgetWithText(TextField, '이름 또는 불러 주었으면 하는 이름'), '다른이름');
       await tester.pump();
@@ -137,7 +143,7 @@ void main() {
         recentStore: recent,
       );
       await pumpApp(tester, services);
-      await tapTab(tester, '병원 찾기');
+      await openFind(tester);
       await tapNext(tester);
       expect(find.text('2 / 6 단계'), findsOneWidget);
 
@@ -152,9 +158,10 @@ void main() {
       expect(favorites.saved, isEmpty);
       expect(recent.saved, isEmpty);
       await goBack(tester);
-      await tester.pumpAndSettle();
-      expect(find.text('지난번 조건'), findsNothing);
-      await tapTab(tester, '병원 찾기');
+      await homeToTop(tester);
+      expect(find.text(homeTitle), findsOneWidget);
+      expect(find.text('지난번 조건으로 다시 찾기'), findsNothing);
+      await openFind(tester);
       expect(find.text('1 / 6 단계'), findsOneWidget);
       expect(nextEnabled(tester), isFalse);
     });
@@ -187,16 +194,16 @@ void main() {
         tester,
         await makeServices(appLock: lock, settingsStore: store, careCardStore: FakeCareCardStore(card)),
       );
-      expect(find.text('함께병원이 잠겨 있어요'), findsOneWidget);
+      expect(find.text('메디움이 잠겨 있어요'), findsOneWidget);
       expect(find.textContaining('잠금을 풀지 못했어요'), findsOneWidget);
-      expect(find.text('무엇을 도와드릴까요?'), findsNothing);
+      expect(find.text(homeTitle), findsNothing);
       // 잠겨 있을 때 카드를 보여 주는 것은 기본으로 꺼져 있다.
       expect(find.text('병원에 보여 주기'), findsNothing);
 
       lock.succeeds = true;
       await tester.tap(find.text('잠금 풀기'));
       await tester.pumpAndSettle();
-      expect(find.text('무엇을 도와드릴까요?'), findsOneWidget);
+      expect(find.text(homeTitle), findsOneWidget);
     });
 
     testWidgets('잠겨 있어도 보여 주기를 켜면 잠금 화면에서 진료 카드를 연다', (tester) async {
@@ -210,7 +217,7 @@ void main() {
           careCardStore: FakeCareCardStore(card),
         ),
       );
-      expect(find.text('함께병원이 잠겨 있어요'), findsOneWidget);
+      expect(find.text('메디움이 잠겨 있어요'), findsOneWidget);
 
       await tester.tap(find.text('병원에 보여 주기'));
       await tester.pumpAndSettle();

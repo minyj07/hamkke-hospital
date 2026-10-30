@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../ui/icons.dart';
+import '../ui/tokens.dart';
 import 'app_scope.dart';
 import 'care_card_screen.dart';
 
@@ -116,6 +118,7 @@ class _LockScreenState extends State<LockScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     final showCard =
         _services.settings.showCardWhenLocked && _services.careCard.card != null;
     final tall = ButtonStyle(minimumSize: WidgetStateProperty.all(const Size.fromHeight(56)));
@@ -127,21 +130,27 @@ class _LockScreenState extends State<LockScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(Icons.lock_outline, size: 72, color: theme.colorScheme.primary),
-                const SizedBox(height: 16),
+                // 메디움 로고와 작은 자물쇠 (디자인의 로고).
+                const Center(child: MediumLogo(height: 72)),
+                const SizedBox(height: 12),
+                Icon(Icons.lock_outline, size: 28, color: c.brandDeep),
+                const SizedBox(height: 12),
                 Semantics(
                   header: true,
-                  child: Text('함께병원이 잠겨 있어요',
+                  child: Text('메디움이 잠겨 있어요',
                       style: theme.textTheme.headlineSmall, textAlign: TextAlign.center),
                 ),
                 const SizedBox(height: 8),
-                const Text('지문·얼굴이나 휴대폰 비밀번호로 잠금을 풀어 주세요.',
-                    textAlign: TextAlign.center),
+                Text('지문·얼굴이나 휴대폰 비밀번호로 잠금을 풀어 주세요.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 15, height: 1.5, color: c.textSecondary)),
                 if (_message != null) ...[
                   const SizedBox(height: 16),
                   Semantics(
                     liveRegion: true,
-                    child: Text(_message!, textAlign: TextAlign.center),
+                    child: Text(_message!,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.warning)),
                   ),
                 ],
                 const SizedBox(height: 24),

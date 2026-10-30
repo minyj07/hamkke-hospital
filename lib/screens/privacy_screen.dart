@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../ui/tokens.dart';
+import '../ui/widgets.dart';
 import 'app_scope.dart';
 
 /// 개인정보 처리방침. 앱은 개인정보를 모으지 않으므로 무엇을 어디에 두는지를 알린다.
@@ -9,7 +11,7 @@ class PrivacyScreen extends StatelessWidget {
   static const _sections = [
     (
       '모으는 개인정보: 없어요',
-      '함께병원은 회원 가입이 없고, 이름·장애 정보·위치 같은 개인정보를 서버로 보내거나 모으지 않아요. '
+      '메디움은 회원 가입이 없고, 이름·장애 정보·위치 같은 개인정보를 서버로 보내거나 모으지 않아요. '
           '사용 통계나 광고 도구도 쓰지 않아요.',
     ),
     (
@@ -19,7 +21,7 @@ class PrivacyScreen extends StatelessWidget {
     ),
     (
       '위치',
-      '‘현재 위치로 찾기’를 누를 때만 위치를 확인하고, 가까운 병원까지의 거리를 계산하는 데만 써요. '
+      '‘현재 위치로 찾기’나 홈의 ‘현재 위치로 보기’를 누를 때만 위치를 확인하고, 가까운 병원까지의 거리를 계산하는 데만 써요. '
           '위치는 저장하거나 보내지 않아요.',
     ),
     (
@@ -46,21 +48,22 @@ class PrivacyScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     final contactEmail = AppScope.of(context).contactEmail;
+    final small = TextStyle(fontSize: 13, color: c.textSecondary);
     return Scaffold(
       appBar: AppBar(title: const Text('개인정보 처리방침')),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
         children: [
           for (final (title, body) in _sections) ...[
-            Semantics(header: true, child: Text(title, style: theme.textTheme.titleMedium)),
-            const SizedBox(height: 4),
-            Text(body),
-            const SizedBox(height: 20),
+            SectionTitle(title),
+            const SizedBox(height: 8),
+            Text(body, style: TextStyle(fontSize: 15, height: 1.6, color: c.text)),
+            const SizedBox(height: 26),
           ],
-          if (contactEmail.isNotEmpty) Text('문의: $contactEmail'),
-          const Text('시행일: 2026년 10월 27일'),
+          if (contactEmail.isNotEmpty) Text('문의: $contactEmail', style: small),
+          Text('시행일: 2026년 10월 27일', style: small),
         ],
       ),
     );

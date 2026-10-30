@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../models/care_card.dart';
+import '../ui/icons.dart';
+import '../ui/tokens.dart';
+import '../ui/widgets.dart';
 import 'app_scope.dart';
 import 'care_card_edit_screen.dart';
 import 'hospital_actions.dart';
 
-/// 나의 진료 카드 탭. 카드가 없으면 무엇인지 알려 주고, 있으면 보여 주기·자주 쓰는 문장·고치기를 둔다.
+/// 나의 진료 카드. 홈의 '나의 진료 카드'와 마이페이지에서 연다.
+/// 카드가 없으면 무엇인지 알려 주고, 있으면 보여 주기·자주 쓰는 문장·보호자 전화·카드 내용·고치기를 둔다.
 class CareCardScreen extends StatelessWidget {
   const CareCardScreen({super.key});
 
@@ -28,37 +32,53 @@ class CareCardScreen extends StatelessWidget {
 void _push(BuildContext context, Widget screen) =>
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
 
-final _tall = ButtonStyle(minimumSize: WidgetStateProperty.all(const Size.fromHeight(56)));
-
+/// 카드를 아직 만들지 않았을 때.
 class _NoCard extends StatelessWidget {
   const _NoCard();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     return ListView(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
       children: [
-        Icon(Icons.badge_outlined, size: 72, color: theme.colorScheme.primary),
-        const SizedBox(height: 16),
-        Text('병원 접수처나 진료실에서 의료진에게 보여 주는 카드예요.', style: theme.textTheme.titleMedium),
+        // 디자인의 카드 아이콘을 연한 초록 칸에 크게 둔다.
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            width: 88,
+            height: 88,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: c.container, borderRadius: BorderRadius.circular(24)),
+            child: DesignIcon(DesignIcons.card, size: 48, strokeWidth: 1.8, color: c.brandDeep),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Semantics(
+          header: true,
+          child: Text('병원 접수처나 진료실에서 의료진에게 보여 주는 카드예요.', style: theme.textTheme.titleMedium),
+        ),
         const SizedBox(height: 8),
-        const Text('내 장애, 소통 방법, 필요한 도움, 주의할 점을 큰 글씨로 보여 줄 수 있어요. '
-            '모든 칸은 비워 둬도 돼요.'),
+        Text(
+          '내 장애, 소통 방법, 필요한 도움, 주의할 점을 큰 글씨로 보여 줄 수 있어요. '
+          '모든 칸은 비워 둬도 돼요.',
+          style: theme.textTheme.bodyMedium?.copyWith(color: c.textSecondary),
+        ),
         const SizedBox(height: 8),
         Text('카드 내용은 이 휴대폰의 보안 저장소에만 암호화해서 두고, 앱 밖으로 보내지 않아요.',
             style: theme.textTheme.bodySmall),
-        const SizedBox(height: 24),
+        const SizedBox(height: 28),
         FilledButton.icon(
-          style: _tall,
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
           icon: const Icon(Icons.add),
           label: const Text('진료 카드 만들기'),
           onPressed: () => _push(context, const CareCardEditScreen()),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         OutlinedButton.icon(
-          style: _tall,
-          icon: const Icon(Icons.chat_bubble_outline),
+          style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+          icon: const Icon(Icons.chat_bubble_outline, size: 20),
           label: const Text('자주 쓰는 문장'),
           onPressed: () => _push(context, const PhrasesScreen()),
         ),
@@ -67,6 +87,7 @@ class _NoCard extends StatelessWidget {
   }
 }
 
+/// 카드를 만들어 둔 때.
 class _CardHome extends StatelessWidget {
   const _CardHome({required this.card});
 
@@ -75,84 +96,97 @@ class _CardHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     final guardian = card.guardianName.trim().isEmpty ? '' : ' (${card.guardianName.trim()})';
+    const tall = Size.fromHeight(52);
     return ListView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       children: [
         FilledButton.icon(
-          style: ButtonStyle(
-            minimumSize: WidgetStateProperty.all(const Size.fromHeight(72)),
-            textStyle: WidgetStateProperty.all(theme.textTheme.titleLarge),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(72),
+            textStyle: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800, letterSpacing: -0.5),
           ),
           icon: const Icon(Icons.visibility_outlined, size: 28),
           label: const Text('병원에 보여 주기'),
           onPressed: () => _push(context, const ShowCardScreen()),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         OutlinedButton.icon(
-          style: _tall,
-          icon: const Icon(Icons.chat_bubble_outline),
+          style: OutlinedButton.styleFrom(minimumSize: tall),
+          icon: const Icon(Icons.chat_bubble_outline, size: 20),
           label: const Text('자주 쓰는 문장'),
           onPressed: () => _push(context, const PhrasesScreen()),
         ),
         if (card.guardianPhone.trim().isNotEmpty) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           OutlinedButton.icon(
-            style: _tall,
-            icon: const Icon(Icons.call),
+            style: OutlinedButton.styleFrom(minimumSize: tall),
+            icon: const DesignIcon(DesignIcons.phone, size: 18, strokeWidth: 2.3),
             label: Text('보호자에게 전화$guardian'),
             onPressed: () => callPhone(context, card.guardianPhone.trim()),
           ),
         ],
-        const SizedBox(height: 24),
-        Semantics(header: true, child: Text('카드 내용', style: theme.textTheme.titleMedium)),
-        const SizedBox(height: 8),
-        Card.outlined(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final s in card.sentences)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Text(s, style: theme.textTheme.bodyLarge),
-                  ),
-                for (final (title, text) in card.notes) ...[
-                  const SizedBox(height: 8),
-                  Text(title, style: theme.textTheme.labelLarge),
-                  Text(text, style: theme.textTheme.bodyLarge),
-                ],
+        const SizedBox(height: 28),
+        const SectionTitle('카드 내용'),
+        const SizedBox(height: 12),
+        // 디자인의 연한 초록 상자에 카드 문장을 담는다.
+        SectionBox(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final s in card.sentences)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Text(s, style: theme.textTheme.bodyLarge),
+                ),
+              for (final (title, text) in card.notes) ...[
+                const SizedBox(height: 10),
+                Text(title, style: theme.textTheme.titleSmall?.copyWith(color: c.brandDeep)),
+                const SizedBox(height: 2),
+                Text(text, style: theme.textTheme.bodyLarge),
               ],
-            ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
-          style: _tall,
-          icon: const Icon(Icons.edit_outlined),
+          style: OutlinedButton.styleFrom(minimumSize: tall),
+          icon: const Icon(Icons.edit_outlined, size: 20),
           label: const Text('카드 고치기'),
           onPressed: () => _push(context, const CareCardEditScreen()),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Text('카드 내용은 이 휴대폰의 보안 저장소에만 암호화해서 둬요.', style: theme.textTheme.bodySmall),
       ],
     );
   }
 }
 
-/// 흰 바탕에 검은 글씨. 진료 카드를 보여 주는 화면은 앱 설정과 상관없이 대비를 가장 크게 한다.
+/// 흰 바탕에 검은 글씨. 진료 카드를 보여 주는 화면은 앱 설정·다크 모드와 상관없이 대비를 가장 크게 한다.
 ThemeData _paperTheme(BuildContext context) {
   final base = Theme.of(context);
+  const black = Colors.black;
   return base.copyWith(
+    brightness: Brightness.light,
     scaffoldBackgroundColor: Colors.white,
     colorScheme: base.colorScheme.copyWith(
+      brightness: Brightness.light,
       surface: Colors.white,
-      onSurface: Colors.black,
-      primary: Colors.black,
+      onSurface: black,
+      onSurfaceVariant: black,
+      primary: black,
       onPrimary: Colors.white,
     ),
-    appBarTheme: const AppBarTheme(backgroundColor: Colors.white, foregroundColor: Colors.black),
+    textTheme: base.textTheme.apply(bodyColor: black, displayColor: black),
+    iconTheme: const IconThemeData(color: black, size: 24),
+    appBarTheme: base.appBarTheme.copyWith(
+      backgroundColor: Colors.white,
+      foregroundColor: black,
+      titleTextStyle: base.appBarTheme.titleTextStyle?.copyWith(color: black),
+      iconTheme: const IconThemeData(color: black, size: 22),
+      actionsIconTheme: const IconThemeData(color: black, size: 22),
+    ),
   );
 }
 
@@ -234,27 +268,31 @@ class PhrasesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('자주 쓰는 문장')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 12),
-            child: Text('누르면 화면 가득 크게 보여 줘요.'),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Text('누르면 화면 가득 크게 보여 줘요.', style: TextStyle(fontSize: 14, color: c.textSecondary)),
           ),
           for (final phrase in commonPhrases)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: 10),
               child: FilledButton.tonal(
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(64),
                   alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  backgroundColor: c.container,
+                  foregroundColor: c.text,
+                  textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: -0.4),
                 ),
                 onPressed: () => _push(context, PhraseScreen(phrase: phrase)),
-                child: Text(phrase, style: theme.textTheme.titleLarge),
+                child: Text(phrase),
               ),
             ),
         ],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../ui/tokens.dart';
+
 /// 데이터를 불러오지 못했을 때의 안내와 다시 시도 버튼.
 class RetryMessage extends StatelessWidget {
   const RetryMessage({super.key, required this.message, required this.onRetry});
@@ -18,7 +20,11 @@ class RetryMessage extends StatelessWidget {
             // 화면 읽기 프로그램이 바로 읽어 주게 한다.
             Semantics(
               liveRegion: true,
-              child: Text(message, textAlign: TextAlign.center),
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: MediumColors.of(context).text),
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(

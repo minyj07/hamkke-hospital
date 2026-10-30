@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/hospital.dart';
+import '../ui/tokens.dart';
 
 // 병원 정보·즐겨찾기 화면이 함께 쓰는 전화·지도·길찾기·공유.
 
@@ -13,7 +14,7 @@ Uri naverMapSearch(Hospital h) => Uri.https(
 
 /// 가족 등에게 보낼 병원 정보.
 String shareText(Hospital h) => [
-      '[함께병원] ${h.name}',
+      '[$appName] ${h.name}',
       [h.kind, h.district].where((s) => s.isNotEmpty).join(' · '),
       '주소: ${h.address}',
       if (h.phone.isNotEmpty) '전화: ${h.phone}',
@@ -55,6 +56,13 @@ Future<void> openOnMap(BuildContext context, Hospital h) => _openMapApp(
       context,
       'nmap://place?lat=${h.lat}&lng=${h.lng}&name=${Uri.encodeComponent(h.name)}',
       naverMapSearch(h),
+    );
+
+/// 네이버 지도에서 [query] 를 찾는다 (홈의 '지도에서 찾기'). 위치는 지도 앱이 스스로 쓰고 이 앱은 받지 않는다.
+Future<void> openMapSearch(BuildContext context, String query) => _openMapApp(
+      context,
+      'nmap://search?query=${Uri.encodeComponent(query)}',
+      Uri.https('map.naver.com', '/p/search/$query'),
     );
 
 /// 지금 있는 곳에서 병원까지 대중교통 길찾기. 네이버 지도 앱이 없으면 카카오맵 웹 길찾기를 연다

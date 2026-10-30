@@ -193,16 +193,35 @@ void main() {
         }
         await tester.tap(find.text('시작하기'));
         await tester.pumpAndSettle();
-        expect(find.text('무엇을 도와드릴까요?'), findsOneWidget);
+        expect(find.text('나에게 맞는\n병원을 찾아보세요'), findsOneWidget);
       });
 
-      testWidgets('홈, 설정과 내 정보 지우기 확인, 개인정보 처리방침, 병원 이름으로 찾기', (tester) async {
+      testWidgets('홈과 홈 검색, 마이페이지, 설정과 내 정보 지우기 확인, 개인정보 처리방침', (tester) async {
         preparePhone(tester);
         await pumpApp(tester, await makeServices(settingsStore: settingsAt(scale)));
         await checkWholeScreen(tester, '홈');
 
-        await tester.tap(find.byTooltip('설정'));
+        // 홈 검색창으로 찾은 결과와, 거기서 연 병원 정보.
+        await tester.enterText(find.byType(TextField), '강남');
         await tester.pumpAndSettle();
+        expect(find.text('검색 결과 3곳'), findsOneWidget);
+        await checkWholeScreen(tester, '홈 검색 결과');
+        await tapAndSettle(tester, '강남재활의학과의원');
+        // 이름으로 찾아 열면 거리·추천 이유가 없고 편의시설 정보도 없다.
+        await checkWholeScreen(tester, '병원 정보 (이름으로 찾은 병원)');
+        await goBack(tester);
+        await tester.tap(find.byTooltip('검색어 지우기'));
+        await tester.pumpAndSettle();
+
+        // 내 주변 병원: 현재 위치로 보기를 눌러 가로 카드가 나온 뒤, 진료과로 거른 뒤.
+        await tapAndSettle(tester, '현재 위치로 보기');
+        await checkWholeScreen(tester, '홈 (내 주변 병원)');
+        await tapAndSettle(tester, '내과');
+        await checkWholeScreen(tester, '홈 (내과로 거름, 근처에 없음)');
+
+        await tapTab(tester, '마이페이지');
+        await checkWholeScreen(tester, '마이페이지 (카드 없음)');
+        await tapAndSettle(tester, '설정');
         await checkWholeScreen(tester, '설정');
         await tapAndSettle(tester, '내 정보 전부 지우기');
         await checkScreen(tester, '내 정보 지우기 확인');
@@ -211,22 +230,6 @@ void main() {
 
         await tapAndSettle(tester, '개인정보 처리방침');
         await checkWholeScreen(tester, '개인정보 처리방침');
-        await goBack(tester);
-        await tester.pumpAndSettle();
-        await goBack(tester);
-        await tester.pumpAndSettle();
-
-        await tapAndSettle(tester, '병원 이름으로 찾기');
-        await checkScreen(tester, '병원 이름으로 찾기 (입력 전)');
-        await tester.enterText(find.byType(TextField), '강남');
-        await tester.pumpAndSettle();
-        expect(find.text('3곳을 찾았어요.'), findsOneWidget);
-        await checkWholeScreen(tester, '병원 이름으로 찾기 (결과)',
-            scrollable: find.descendant(of: find.byType(ListView), matching: find.byType(Scrollable)));
-        await tester.tap(find.text('강남재활의학과의원'));
-        await tester.pumpAndSettle();
-        // 이름으로 찾아 열면 거리·추천 이유가 없고 편의시설 정보도 없다.
-        await checkWholeScreen(tester, '병원 정보 (이름으로 찾은 병원)');
       });
 
       testWidgets('병원 찾기 6단계 → 추천 결과와 거르기 → 병원 정보, 지정 기관 설명, 정보 오류 신고',
@@ -239,7 +242,7 @@ void main() {
             repository: FakeRepository(hospitals: const [designatedRehab, ...defaultHospitals]),
           ),
         );
-        await tapTab(tester, '병원 찾기');
+        await openFind(tester);
         await checkWholeScreen(tester, '병원 찾기 1단계 장애 유형');
         await tapAndSettle(tester, '지체장애');
         await tapAndSettle(tester, '기타');
@@ -330,8 +333,8 @@ void main() {
       testWidgets('진료 카드: 만들기 → 보여 주기 → 자주 쓰는 문장과 크게 보기 → 고치기와 지우기 확인', (tester) async {
         preparePhone(tester);
         await pumpApp(tester, await makeServices(settingsStore: settingsAt(scale)));
-        await tapTab(tester, '진료 카드');
-        await checkWholeScreen(tester, '진료 카드 탭 (카드 없음)');
+        await openCard(tester);
+        await checkWholeScreen(tester, '나의 진료 카드 (카드 없음)');
 
         await tapAndSettle(tester, '진료 카드 만들기');
         await checkWholeScreen(tester, '진료 카드 만들기');
@@ -345,7 +348,7 @@ void main() {
         await enterField(tester, '보호자 전화번호', '010-1234-5678');
         await tapAndSettle(tester, '저장하기');
         expect(find.text('진료 카드를 저장했어요.'), findsOneWidget);
-        await checkWholeScreen(tester, '진료 카드 탭 (카드 있음, 저장 알림)');
+        await checkWholeScreen(tester, '나의 진료 카드 (카드 있음, 저장 알림)');
         // 알림이 사라진 뒤에 눌러야 알림을 누르지 않는다.
         await tester.pump(const Duration(seconds: 5));
         await tester.pumpAndSettle();
@@ -370,6 +373,13 @@ void main() {
         await checkScreen(tester, '진료 카드 지우기 확인');
         await tester.tap(find.text('취소'));
         await tester.pumpAndSettle();
+        await goBack(tester);
+        await goBack(tester);
+
+        // 카드를 만든 뒤의 마이페이지.
+        await tapTab(tester, '마이페이지');
+        expect(find.text('이지현 님'), findsOneWidget);
+        await checkWholeScreen(tester, '마이페이지 (카드 있음)');
       });
 
       testWidgets('즐겨찾기 탭: 빈 상태와 즐겨찾기·최근 본 병원이 있을 때', (tester) async {
@@ -403,7 +413,7 @@ void main() {
             careCardStore: FakeCareCardStore(card),
           ),
         );
-        expect(find.text('함께병원이 잠겨 있어요'), findsOneWidget);
+        expect(find.text('메디움이 잠겨 있어요'), findsOneWidget);
         await checkWholeScreen(tester, '잠금 화면');
         await tapAndSettle(tester, '병원에 보여 주기');
         expect(find.text('안녕하세요. 저는 김함께예요.'), findsOneWidget);

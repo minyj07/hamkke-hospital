@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 
 import '../data/regions.dart';
 import 'recommender.dart' show distanceKm;
+import '../ui/tokens.dart';
 
 /// 현재 위치를 얻은 결과. 실패하면 [error] 에 사용자에게 보여줄 문구가 있다.
 class LocationResult {
@@ -38,7 +39,7 @@ class DeviceLocationService implements LocationService {
       }
       if (permission == LocationPermission.deniedForever) {
         return const LocationResult.error(
-            '설정 > 애플리케이션 > 함께병원 > 권한에서 위치를 허용해 주세요.');
+            '설정 > 애플리케이션 > $appName > 권한에서 위치를 허용해 주세요.');
       }
       final p = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(

@@ -3,26 +3,30 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../models/search_conditions.dart';
+import '../ui/icons.dart';
+import '../ui/tokens.dart';
 import 'app_scope.dart';
 import 'care_card_screen.dart';
 import 'favorites_screen.dart';
 import 'find_screen.dart';
 import 'home_screen.dart';
+import 'my_page_screen.dart';
 
-/// 하단 탭. 설정은 홈 오른쪽 위에 있다.
-enum AppTab {
-  home('홈', Icons.home_outlined, Icons.home),
-  find('병원 찾기', Icons.local_hospital_outlined, Icons.local_hospital),
-  card('진료 카드', Icons.badge_outlined, Icons.badge),
-  favorites('즐겨찾기', Icons.star_outline, Icons.star);
+/// 탭 화면. 하단 탭은 홈·즐겨찾기·마이페이지 3개이고(메디움 디자인), 병원 찾기는 홈의 바로가기로
+/// 여는 화면이라 탭 막대에서는 '홈'이 켜져 있다. 탭을 바꿔도 각 화면에서 하던 것은 그대로 둔다.
+enum AppTab { home, find, favorites, my }
 
-  const AppTab(this.label, this.icon, this.selectedIcon);
+/// 하단 탭 막대의 칸.
+enum _Destination {
+  home('홈', DesignIcons.home),
+  favorites('즐겨찾기', DesignIcons.heart),
+  my('마이페이지', DesignIcons.user);
+
+  const _Destination(this.label, this.icon);
   final String label;
-  final IconData icon;
-  final IconData selectedIcon;
+  final DesignIcons icon;
 }
 
-/// 홈·병원 찾기·진료 카드·즐겨찾기 탭. 탭을 바꿔도 각 탭에서 하던 것은 그대로 둔다.
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
 
@@ -70,12 +74,14 @@ class AppShellState extends State<AppShell> {
       case AppShortcut.favorites:
         showTab(AppTab.favorites);
       case AppShortcut.card:
-        showTab(AppTab.card);
-        if (_services.careCard.card != null) {
-          Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShowCardScreen()));
-        }
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) =>
+              _services.careCard.card != null ? const ShowCardScreen() : const CareCardScreen(),
+        ));
     }
   }
+
+  AppTab get tab => _tab;
 
   void showTab(AppTab tab) => setState(() => _tab = tab);
 
@@ -91,8 +97,15 @@ class AppShellState extends State<AppShell> {
     showTab(AppTab.home);
   }
 
+  _Destination get _destination => switch (_tab) {
+        AppTab.home || AppTab.find => _Destination.home,
+        AppTab.favorites => _Destination.favorites,
+        AppTab.my => _Destination.my,
+      };
+
   @override
   Widget build(BuildContext context) {
+    final c = MediumColors.of(context);
     return PopScope(
       canPop: _tab == AppTab.home,
       onPopInvokedWithResult: (didPop, _) {
@@ -104,21 +117,29 @@ class AppShellState extends State<AppShell> {
           children: [
             const HomeScreen(),
             FindScreen(key: _find),
-            const CareCardScreen(),
             const FavoritesScreen(),
+            const MyPageScreen(),
           ],
         ),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _tab.index,
-          onDestinationSelected: (i) => showTab(AppTab.values[i]),
-          destinations: [
-            for (final t in AppTab.values)
-              NavigationDestination(
-                icon: Icon(t.icon),
-                selectedIcon: Icon(t.selectedIcon),
-                label: t.label,
-              ),
-          ],
+        // 디자인: 흰 탭 막대 위에 옅은 선과 그림자.
+        bottomNavigationBar: DecoratedBox(
+          decoration: BoxDecoration(
+            color: c.background,
+            border: Border(top: BorderSide(color: c.divider)),
+            boxShadow: [BoxShadow(color: c.shadow.withValues(alpha: 0.05), blurRadius: 12, offset: const Offset(0, -2))],
+          ),
+          child: NavigationBar(
+            selectedIndex: _destination.index,
+            onDestinationSelected: (i) => showTab(switch (_Destination.values[i]) {
+              _Destination.home => AppTab.home,
+              _Destination.favorites => AppTab.favorites,
+              _Destination.my => AppTab.my,
+            }),
+            destinations: [
+              for (final d in _Destination.values)
+                NavigationDestination(icon: DesignIcon(d.icon, size: 22), label: d.label),
+            ],
+          ),
         ),
       ),
     );

@@ -6,6 +6,9 @@ import 'app_scope.dart';
 import 'data_notice.dart';
 import 'hospital_actions.dart';
 import 'hospital_detail_screen.dart';
+import '../ui/icons.dart';
+import '../ui/tokens.dart';
+import '../ui/widgets.dart';
 
 /// 즐겨찾기한 병원과 최근 본 병원. 열거나 전화·길찾기를 누를 때마다 지금 데이터에서 다시 읽는다.
 class FavoritesScreen extends StatefulWidget {
@@ -74,83 +77,80 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    Widget header(String text) => Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-          child: Semantics(
-            header: true,
-            child: Text(text, style: theme.textTheme.titleLarge),
-          ),
-        );
+    final c = MediumColors.of(context);
+    final muted = TextStyle(fontSize: 14, height: 1.5, color: c.textMuted);
     return Scaffold(
-      appBar: AppBar(title: const Text('즐겨찾기')),
-      body: ListenableBuilder(
-        listenable: Listenable.merge([_services.favorites, _services.recent]),
-        builder: (context, _) {
-          final favorites = _services.favorites.items;
-          final recent = _services.recent.items;
-          return ListView(
-            children: [
-              if (_loading) const LinearProgressIndicator(),
-              header('즐겨찾기'),
-              if (favorites.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('즐겨찾기한 병원이 없어요.\n병원 정보 화면에서 ‘즐겨찾기에 넣기’를 누르면 여기에 모여요.'),
-                ),
-              for (final f in favorites)
-                _FavoriteCard(
-                  saved: f,
-                  onOpen: () => _open(f),
-                  onCall: () => _withHospital(f, (h) {
-                    if (h.phone.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('전화번호 정보가 없어요.')));
-                    } else {
-                      callPhone(context, h.phone);
-                    }
-                  }),
-                  onDirections: () => _withHospital(f, (h) => openDirections(context, h)),
-                  onRemove: () => _services.favorites.remove(f.id),
-                ),
-              Row(
-                children: [
-                  Expanded(child: header('최근 본 병원')),
-                  if (recent.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16, right: 8),
-                      child: TextButton(
-                        style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-                        onPressed: _clearRecent,
-                        child: const Text('기록 지우기'),
-                      ),
+      body: SafeArea(
+        bottom: false,
+        child: ListenableBuilder(
+          listenable: Listenable.merge([_services.favorites, _services.recent]),
+          builder: (context, _) {
+            final favorites = _services.favorites.items;
+            final recent = _services.recent.items;
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(22, 34, 22, 0),
+              children: [
+                PageHeading('즐겨찾기', subtitle: '저장한 병원 ${favorites.length}곳'),
+                const SizedBox(height: 20),
+                if (_loading) const LinearProgressIndicator(),
+                if (favorites.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Text(
+                      '아직 저장한 병원이 없어요\n홈이나 병원 정보에서 ♡를 눌러 저장해 보세요',
+                      semanticsLabel: '아직 저장한 병원이 없어요. 홈이나 병원 정보에서 하트를 눌러 저장해 보세요.',
+                      textAlign: TextAlign.center,
+                      style: muted,
                     ),
+                  ),
+                for (final f in favorites) ...[
+                  _FavoriteCard(
+                    saved: f,
+                    onOpen: () => _open(f),
+                    onCall: () => _withHospital(f, (h) {
+                      if (h.phone.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('전화번호 정보가 없어요.')));
+                      } else {
+                        callPhone(context, h.phone);
+                      }
+                    }),
+                    onDirections: () => _withHospital(f, (h) => openDirections(context, h)),
+                    onRemove: () => _services.favorites.remove(f.id),
+                  ),
+                  const SizedBox(height: 10),
                 ],
-              ),
-              if (recent.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('최근 본 병원이 없어요. 병원 정보를 열면 최근 ${RecentHospitals.limit}곳까지 여기에 남아요.'),
+                const SizedBox(height: 18),
+                SectionTitle(
+                  '최근 본 병원',
+                  trailing: recent.isEmpty
+                      ? null
+                      : TextButton(onPressed: _clearRecent, child: const Text('기록 지우기')),
                 ),
-              for (final r in recent)
-                ListTile(
-                  title: Text(r.name),
-                  subtitle: Text([r.kind, r.address].where((s) => s.isNotEmpty).join(' · ')),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _open(r),
-                ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: DataNotice(),
-              ),
-            ],
-          );
-        },
+                const SizedBox(height: 10),
+                if (recent.isEmpty)
+                  Text('최근 본 병원이 없어요. 병원 정보를 열면 최근 ${RecentHospitals.limit}곳까지 여기에 남아요.',
+                      style: muted),
+                for (final r in recent) ...[
+                  HospitalTile(
+                    id: r.id,
+                    name: r.name,
+                    subtitle: [r.kind, r.address].where((s) => s.isNotEmpty).join(' · '),
+                    onTap: () => _open(r),
+                  ),
+                  const SizedBox(height: 10),
+                ],
+                const DataNotice(),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 }
 
+/// 즐겨찾기한 병원 (디자인: 사진 자리·이름·설명·빨간 하트). 아래에서 바로 전화·길찾기를 한다.
 class _FavoriteCard extends StatelessWidget {
   const _FavoriteCard({
     required this.saved,
@@ -168,44 +168,38 @@ class _FavoriteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tall = ButtonStyle(minimumSize: WidgetStateProperty.all(const Size(48, 48)));
-    return Card.outlined(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ListTile(
-            title: Text(saved.name),
-            subtitle: Text([saved.kind, saved.address].where((s) => s.isNotEmpty).join(' · ')),
-            onTap: onOpen,
-            trailing: IconButton(
-              icon: const Icon(Icons.star),
-              tooltip: '${saved.name} 즐겨찾기에서 빼기',
-              onPressed: onRemove,
+    final small = OutlinedButton.styleFrom(
+      minimumSize: const Size(48, 44),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+    );
+    return HospitalTile(
+      id: saved.id,
+      name: saved.name,
+      subtitle: [saved.kind, saved.address].where((s) => s.isNotEmpty).join(' · '),
+      showTone: true,
+      onTap: onOpen,
+      trailing: HeartButton(name: saved.name, favorite: true, onPressed: onRemove),
+      footer: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton.icon(
+              style: small,
+              icon: const DesignIcon(DesignIcons.phone, size: 16, strokeWidth: 2.3),
+              label: Text('전화', semanticsLabel: '${saved.name}에 전화'),
+              onPressed: onCall,
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                OutlinedButton.icon(
-                  style: tall,
-                  icon: const Icon(Icons.call),
-                  label: Text('전화', semanticsLabel: '${saved.name}에 전화'),
-                  onPressed: onCall,
-                ),
-                OutlinedButton.icon(
-                  style: tall,
-                  icon: const Icon(Icons.directions),
-                  label: Text('길찾기', semanticsLabel: '${saved.name} 길찾기'),
-                  onPressed: onDirections,
-                ),
-              ],
+            OutlinedButton.icon(
+              style: small,
+              icon: const DesignIcon(DesignIcons.route, size: 16, strokeWidth: 2.3),
+              label: Text('길찾기', semanticsLabel: '${saved.name} 길찾기'),
+              onPressed: onDirections,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

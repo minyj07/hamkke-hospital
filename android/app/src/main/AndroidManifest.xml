@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <!-- 장애·건강 정보(검색 조건, 즐겨찾기, 최근 본 병원, 진료 카드)와 내려받은 병원 데이터는 백업하지 않는다 (res/xml 의 두 규칙) -->
     <application
-        android:label="함께병원"
+        android:label="메디움"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:fullBackupContent="@xml/backup_rules"

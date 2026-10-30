@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 앱이 뜨는 동안 보이는 스플래시 배경. 앱 화면의 밝은 바탕과 비슷한 연한 보라다. -->
-    <color name="splash_background">#F2EFF8</color>
+    <!-- 앱이 뜨는 동안 보이는 스플래시 배경. 디자인의 흰 화면과 같다. -->
+    <color name="splash_background">#FFFFFF</color>
     <!-- 적응형 아이콘 바탕색. flutter_launcher_icons 가 pubspec 의 adaptive_icon_background 로 다시 쓴다. -->
-    <color name="ic_launcher_background">#5B3FA0</color>
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>

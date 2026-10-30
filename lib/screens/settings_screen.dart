@@ -5,6 +5,7 @@ import '../data/regions.dart';
 import 'app_scope.dart';
 import 'hospital_actions.dart';
 import 'privacy_screen.dart';
+import '../ui/tokens.dart';
 
 /// 글자 크기·고대비·앱 잠금, 내 정보 지우기, 병원 정보 기준일·출처, 개인정보 처리방침·라이선스·문의.
 class SettingsScreen extends StatefulWidget {
@@ -85,14 +86,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final c = MediumColors.of(context);
     final settings = _services.settings;
+    // 묶음 제목 (디자인의 섹션 제목 17/800 을 목록에 맞게 짙은 초록으로).
     Widget header(String text) => Padding(
-          padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+          padding: const EdgeInsets.fromLTRB(20, 28, 20, 6),
           child: Semantics(
             header: true,
-            child: Text(text, style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.primary,
+            child: Text(text, style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+              color: c.brandDeep,
             )),
           ),
         );
@@ -114,8 +119,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               if (scale != null) ...[
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Text('글자 크기 $percent%'),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                  child: Text('글자 크기 $percent%', style: const TextStyle(fontWeight: FontWeight.w700)),
                 ),
                 Slider(
                   value: scale,
@@ -148,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: settings.appLock ? settings.setShowCardWhenLocked : null,
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline),
+                leading: const _IconBox(Icons.delete_outline),
                 title: const Text('내 정보 전부 지우기'),
                 subtitle: const Text('진료 카드, 지난번 검색 조건, 즐겨찾기, 최근 본 병원'),
                 onTap: _clearAll,
@@ -157,7 +162,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               FutureBuilder(
                 future: _info,
                 builder: (context, snapshot) => ListTile(
-                  leading: const Icon(Icons.event_note),
+                  leading: const _IconBox(Icons.event_note),
                   title: Text(snapshot.hasData
                       ? '${snapshot.data!.generatedAt} 기준 공공데이터'
                       : '기준일을 확인하고 있어요'),
@@ -167,14 +172,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('새 병원 정보는 앱을 켤 때 저절로 받아요.'),
+                    Text('새 병원 정보는 앱을 켤 때 저절로 받아요.',
+                        style: TextStyle(fontSize: 14, color: c.textSecondary)),
                     const SizedBox(height: 8),
                     OutlinedButton(
-                      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                      style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
                       onPressed: _checking ? null : _checkUpdate,
                       child: Text(_checking ? '확인하고 있어요' : '지금 새 정보 확인하기'),
                     ),
@@ -189,31 +195,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               header('앱 정보'),
               ListTile(
-                leading: const Icon(Icons.privacy_tip_outlined),
+                leading: const _IconBox(Icons.privacy_tip_outlined),
                 title: const Text('개인정보 처리방침'),
                 onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const PrivacyScreen())),
               ),
               ListTile(
-                leading: const Icon(Icons.description_outlined),
+                leading: const _IconBox(Icons.description_outlined),
                 title: const Text('오픈소스 라이선스'),
                 onTap: () => showLicensePage(
                   context: context,
-                  applicationName: '함께병원',
+                  applicationName: appName,
                   applicationVersion: _services.appVersion,
                 ),
               ),
               if (_services.contactEmail.isNotEmpty)
                 ListTile(
-                  leading: const Icon(Icons.mail_outline),
+                  leading: const _IconBox(Icons.mail_outline),
                   title: const Text('문의하기'),
                   subtitle: Text(_services.contactEmail),
                   onTap: () => openExternal(context, Uri.parse(
-                      'mailto:${_services.contactEmail}?subject=${Uri.encodeComponent('[함께병원 문의]')}')),
+                      'mailto:${_services.contactEmail}?subject=${Uri.encodeComponent('[$appName 문의]')}')),
                 ),
               if (_services.appVersion.isNotEmpty)
                 ListTile(
-                  leading: const Icon(Icons.info_outline),
+                  leading: const _IconBox(Icons.info_outline),
                   title: const Text('앱 버전'),
                   subtitle: Text(_services.appVersion),
                 ),
@@ -222,6 +228,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+/// 설정 줄 앞의 아이콘 (디자인: 연한 초록 36px 네모 속 짙은 초록 아이콘).
+class _IconBox extends StatelessWidget {
+  const _IconBox(this.icon);
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = MediumColors.of(context);
+    return Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(color: c.container, borderRadius: BorderRadius.circular(10)),
+      child: Icon(icon, size: 20, color: c.brandDeep),
     );
   }
 }
