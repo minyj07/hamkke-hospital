@@ -1,0 +1,32 @@
+{
+ "schema": 1,
+ "version": "2026-11-08T22:11:24Z",
+ "generatedAt": "2026-11-09",
+ "hospitalCount": 61721,
+ "sources": [
+  "건강보험심사평가원 병원정보서비스",
+  "국민건강보험공단_장애인 건강주치의 의료기관 목록_20250721",
+  "보건복지부·국립재활원 지정 기관 목록"
+ ],
+ "files": {
+  "regions.json": "5ecedd23d1251c7e353b80b12a18b7e184892c1639e3ea2cb43f100cae06ef4f",
+  "search.json": "287be30eaa8db1b7489780d77ee4fb79e1d8dbfc19edee719f9a46fd1e7912dd",
+  "scoring.json": "c8b23df9e7065254b844fca1f1c86ea37699ebf9384dc90fd07cb2a3bff7f9c9",
+  "hospitals/110000.json": "52666aef09c982acfe881cc4a9cc9686cca087e1c403d97ad6bbc5c8dcffde92",
+  "hospitals/210000.json": "d2d6212453bdeec2b3626646ce44a60b35e005ae3a66b4c96ce46b6a831f5b84",
+  "hospitals/220000.json": "d984ce056fb8b9cbaaf63f83bc5ee4aef72f301194b98345ae2239669917c20a",
+  "hospitals/230000.json": "f1527f71c03cced2b536ac0635c4b5e2d85454e226f77205a5d33713d56feaaa",
+  "hospitals/250000.json": "5e60ba77243810a91a9d9b2fc04dc7e3c1117c23bafa5a377298ee5e0a236753",
+  "hospitals/260000.json": "cb80596fdd71e746a4cb204c70476ac53bb18d84b6cc4fa50f28d112d204686e",
+  "hospitals/310000.json": "f1260126d21f030e37d1b07fe17bc2dd367c7a0b0f5f5ca1bb97697b50e827ee",
+  "hospitals/320000.json": "4b6455abbabeb1da6adac605d0821a9ac6be43dd4274c5c2a596f717a793f683",
+  "hospitals/330000.json": "d1ac8f507230e6abd62e165c848d3a0bf3871cc94755ec43cffad1ab568eb09b",
+  "hospitals/340000.json": "403a8cb351d12898966ddcb9a9a89ba92944aa92cbf648e10d2a0180736b0c6f",
+  "hospitals/350000.json": "24be1ba62bf5f0bb227f4df26b1198dcb1641368317237d28a86cd4860472853",
+  "hospitals/360000.json": "614ff4093f40f0b4f14923a0a804ec7ab35fbf2029d42f7703c186d9edc909c5",
+  "hospitals/370000.json": "3b1c77064c92a3cf6ca972267be466ce653ba46f4a5ed9f9815504a0e829e705",
+  "hospitals/380000.json": "510bff1e9866b3db91cd5a2ed44f5fa4a2f1eb522235a5b0abbeb6d5820a7ca8",
+  "hospitals/390000.json": "794cf443d3f049cfe63223785331b962411322a1dad045d460207637ee0c6f58",
+  "hospitals/410000.json": "db2be7d0876d04e883e19fae2593f896104dca54235ebfc02cfe66342281c732"
+ }
+}

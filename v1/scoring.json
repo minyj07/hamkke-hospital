@@ -1,0 +1,16 @@
+{
+ "designated": 50,
+ "coreDepartment": 20,
+ "coreDepartmentMax": 2,
+ "generalDepartment": 5,
+ "generalDepartmentMax": 2,
+ "specialist": 15,
+ "child": 10,
+ "facility": 8,
+ "facilityMissing": 6,
+ "chosenFacility": 12,
+ "chosenFacilityMissing": 10,
+ "regionalPerKm": 0.2,
+ "regionalMaxPenalty": 30,
+ "localPerKm": 2
+}
